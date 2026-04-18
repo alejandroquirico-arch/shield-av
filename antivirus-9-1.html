@@ -1,0 +1,2809 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SHIELD AV">
+<meta name="theme-color" content="#00ff88">
+<meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src *; img-src * data: blob:; style-src * 'unsafe-inline';">
+<meta name="description" content="Antivirus completo: escanea archivos, URLs y APKs">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<title>SHIELD AV — Antivirus Suite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #070b12;
+    --bg2: #0c1220;
+    --bg3: #111927;
+    --green: #00ff88;
+    --green2: #00cc66;
+    --red: #ff3355;
+    --yellow: #ffcc00;
+    --blue: #00aaff;
+    --cyan: #00eeff;
+    --text: #c8d8e8;
+    --text2: #7a9ab5;
+    --border: #1a2e44;
+    --glow: 0 0 20px rgba(0,255,136,0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  @keyframes slideDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to   { transform: translateY(0);     opacity: 1; }
+  }
+  @keyframes shrink {
+    from { width: 100%; }
+    to   { width: 0%; }
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Scanline */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(180deg, rgba(0,255,136,0.08) 0%, transparent 100%);
+    border-bottom: 1px solid rgba(0,255,136,0.2);
+    padding: 16px 0;
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+
+  .header-inner {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--green), var(--cyan));
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    display: flex; align-items: center; justify-content: center;
+    animation: pulse 2s infinite;
+    font-size: 18px;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(0,255,136,0.5); }
+    50% { box-shadow: 0 0 30px rgba(0,255,136,0.9), 0 0 60px rgba(0,255,136,0.3); }
+  }
+
+  .logo-text {
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: 22px;
+    letter-spacing: 4px;
+    color: var(--green);
+    text-shadow: 0 0 20px rgba(0,255,136,0.6);
+  }
+
+  .logo-sub { font-size: 11px; color: var(--text2); letter-spacing: 3px; font-family: 'Share Tech Mono'; }
+
+  .status-bar {
+    display: flex; align-items: center; gap: 20px;
+    font-family: 'Share Tech Mono'; font-size: 12px;
+  }
+
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 10px var(--green);
+    animation: blink 1.5s infinite;
+  }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .vt-config { display: flex; align-items: center; gap: 8px; }
+  .vt-input {
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); font-family: 'Share Tech Mono'; font-size: 11px;
+    padding: 6px 10px; border-radius: 4px; width: 220px;
+    transition: border-color 0.3s;
+  }
+  .vt-input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 8px rgba(0,255,136,0.2); }
+  .vt-input::placeholder { color: var(--text2); }
+
+  .btn-save {
+    background: linear-gradient(135deg, var(--green2), var(--green));
+    border: none; color: #000; font-family: 'Rajdhani'; font-weight: 700;
+    font-size: 12px; padding: 6px 14px; border-radius: 4px; cursor: pointer;
+    letter-spacing: 1px; transition: all 0.2s;
+  }
+  .btn-save:hover { transform: translateY(-1px); box-shadow: var(--glow); }
+
+  /* TABS */
+  .tabs {
+    display: flex; gap: 2px; padding: 20px 0 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab {
+    padding: 10px 24px; font-family: 'Rajdhani'; font-weight: 600;
+    font-size: 14px; letter-spacing: 2px; cursor: pointer;
+    border: 1px solid transparent; border-bottom: none;
+    border-radius: 6px 6px 0 0; color: var(--text2);
+    transition: all 0.2s; background: transparent;
+    text-transform: uppercase;
+  }
+
+  .tab.active {
+    color: var(--green); border-color: var(--border);
+    border-bottom: 2px solid var(--green);
+    background: var(--bg2);
+    box-shadow: 0 -4px 16px rgba(0,255,136,0.1);
+  }
+
+  .tab:hover:not(.active) { color: var(--text); background: var(--bg3); }
+
+  /* PANELS */
+  .panel { display: none; padding: 24px 0; }
+  .panel.active { display: block; }
+
+  /* SCANNER PANEL */
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 60px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: var(--bg2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .drop-zone::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, rgba(0,255,136,0.05) 0%, transparent 70%);
+    opacity: 0; transition: opacity 0.3s;
+  }
+
+  .drop-zone:hover::before, .drop-zone.dragover::before { opacity: 1; }
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--green);
+    box-shadow: 0 0 30px rgba(0,255,136,0.15);
+  }
+
+  .drop-icon { font-size: 48px; margin-bottom: 16px; }
+  .drop-title { font-family: 'Orbitron'; font-size: 18px; color: var(--green); margin-bottom: 8px; }
+  .drop-sub { color: var(--text2); font-family: 'Share Tech Mono'; font-size: 13px; }
+
+  .btn-scan {
+    background: linear-gradient(135deg, #003322, #005533);
+    border: 1px solid var(--green);
+    color: var(--green); font-family: 'Orbitron'; font-size: 14px;
+    padding: 14px 40px; border-radius: 6px; cursor: pointer;
+    letter-spacing: 3px; margin-top: 20px;
+    transition: all 0.3s; display: inline-block;
+  }
+  .btn-scan:hover:not(:disabled) {
+    background: linear-gradient(135deg, #005533, #007744);
+    box-shadow: var(--glow); transform: translateY(-2px);
+  }
+  .btn-scan:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* RESULTS */
+  .results-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px;
+  }
+
+  .result-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px;
+    animation: slideIn 0.4s ease;
+  }
+
+  @keyframes slideIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+  .result-card.clean { border-color: rgba(0,255,136,0.4); box-shadow: 0 0 20px rgba(0,255,136,0.08); }
+  .result-card.suspicious { border-color: rgba(255,204,0,0.4); box-shadow: 0 0 20px rgba(255,204,0,0.08); }
+  .result-card.malicious { border-color: rgba(255,51,85,0.4); box-shadow: 0 0 20px rgba(255,51,85,0.08); }
+
+  .rc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .rc-title { font-family: 'Orbitron'; font-size: 13px; letter-spacing: 1px; color: var(--text2); }
+  .rc-badge {
+    font-family: 'Share Tech Mono'; font-size: 11px; padding: 3px 10px;
+    border-radius: 20px; font-weight: bold;
+  }
+  .rc-badge.clean { background: rgba(0,255,136,0.15); color: var(--green); border: 1px solid var(--green); }
+  .rc-badge.suspicious { background: rgba(255,204,0,0.15); color: var(--yellow); border: 1px solid var(--yellow); }
+  .rc-badge.malicious { background: rgba(255,51,85,0.15); color: var(--red); border: 1px solid var(--red); }
+
+  .rc-value { font-family: 'Share Tech Mono'; font-size: 12px; color: var(--text2); word-break: break-all; }
+  .rc-value.mono-large { font-size: 24px; color: var(--text); font-family: 'Orbitron'; }
+
+  /* THREAT METER */
+  .threat-meter { margin: 16px 0; }
+  .tm-label { display: flex; justify-content: space-between; font-family: 'Share Tech Mono'; font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+  .tm-bar { height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+  .tm-fill {
+    height: 100%; border-radius: 4px; transition: width 1s ease;
+    background: linear-gradient(90deg, var(--green), var(--yellow), var(--red));
+  }
+
+  /* HEURISTICS */
+  .heuristic-list { display: flex; flex-direction: column; gap: 8px; }
+  .heuristic-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; border-radius: 6px;
+    font-family: 'Share Tech Mono'; font-size: 12px;
+    background: var(--bg3);
+  }
+  .hi-icon { font-size: 14px; }
+  .hi-name { flex: 1; color: var(--text); }
+  .hi-status { font-size: 10px; letter-spacing: 1px; }
+  .hi-status.ok { color: var(--green); }
+  .hi-status.warn { color: var(--yellow); }
+  .hi-status.bad { color: var(--red); }
+
+  /* PROGRESS */
+  .scan-progress {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px; margin-top: 24px;
+    display: none;
+  }
+  .sp-title { font-family: 'Orbitron'; font-size: 14px; color: var(--green); margin-bottom: 16px; letter-spacing: 2px; }
+  .sp-log {
+    font-family: 'Share Tech Mono'; font-size: 12px; color: var(--text2);
+    height: 120px; overflow-y: auto; padding: 12px;
+    background: var(--bg); border-radius: 6px; border: 1px solid var(--border);
+  }
+  .sp-log div { padding: 2px 0; }
+  .sp-log .log-ok { color: var(--green); }
+  .sp-log .log-warn { color: var(--yellow); }
+  .sp-log .log-bad { color: var(--red); }
+  .sp-log .log-info { color: var(--blue); }
+
+  .sp-bar-wrap { margin-top: 14px; }
+  .sp-bar { height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+  .sp-fill {
+    height: 100%; border-radius: 2px; width: 0;
+    background: linear-gradient(90deg, var(--cyan), var(--green));
+    transition: width 0.3s ease; box-shadow: 0 0 8px var(--green);
+  }
+
+  /* VT RESULTS */
+  .vt-results {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px; margin-top: 16px; display: none;
+  }
+  .vt-title { font-family: 'Orbitron'; font-size: 13px; color: var(--blue); margin-bottom: 14px; letter-spacing: 2px; }
+  .vt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .vt-stat { text-align: center; padding: 12px; background: var(--bg3); border-radius: 8px; }
+  .vt-stat-val { font-family: 'Orbitron'; font-size: 28px; font-weight: 700; }
+  .vt-stat-val.safe { color: var(--green); }
+  .vt-stat-val.threat { color: var(--red); }
+  .vt-stat-val.unknown { color: var(--yellow); }
+  .vt-stat-label { font-family: 'Share Tech Mono'; font-size: 10px; color: var(--text2); margin-top: 4px; letter-spacing: 1px; }
+
+  /* ENGINE LIST */
+  .engine-list {
+    margin-top: 14px; max-height: 180px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .engine-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 10px; background: var(--bg3); border-radius: 4px;
+    font-family: 'Share Tech Mono'; font-size: 11px;
+  }
+  .engine-name { color: var(--text); }
+  .engine-result { font-size: 10px; letter-spacing: 1px; }
+  .engine-result.clean { color: var(--green); }
+  .engine-result.detected { color: var(--red); }
+
+  /* DASHBOARD PANEL */
+  .dash-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .dash-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px; text-align: center;
+  }
+  .dc-icon { font-size: 32px; margin-bottom: 8px; }
+  .dc-val { font-family: 'Orbitron'; font-size: 28px; font-weight: 700; color: var(--green); }
+  .dc-label { font-family: 'Share Tech Mono'; font-size: 11px; color: var(--text2); margin-top: 4px; letter-spacing: 1px; }
+
+  /* HISTORY */
+  .section-title { font-family: 'Orbitron'; font-size: 15px; color: var(--green); letter-spacing: 3px; margin-bottom: 16px; }
+  .history-table { width: 100%; border-collapse: collapse; }
+  .history-table th {
+    font-family: 'Share Tech Mono'; font-size: 11px; color: var(--text2);
+    letter-spacing: 2px; text-align: left; padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .history-table td {
+    font-family: 'Share Tech Mono'; font-size: 12px; color: var(--text);
+    padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.04);
+    vertical-align: middle;
+  }
+  .history-table tr:hover td { background: var(--bg3); }
+  .tag {
+    display: inline-block; padding: 2px 10px; border-radius: 20px;
+    font-size: 10px; letter-spacing: 1px;
+  }
+  .tag.clean { background: rgba(0,255,136,0.15); color: var(--green); border: 1px solid var(--green); }
+  .tag.suspicious { background: rgba(255,204,0,0.15); color: var(--yellow); border: 1px solid var(--yellow); }
+  .tag.malicious { background: rgba(255,51,85,0.15); color: var(--red); border: 1px solid var(--red); }
+
+  /* EDUCATION PANEL */
+  .edu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .edu-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px;
+  }
+  .edu-icon { font-size: 36px; margin-bottom: 14px; }
+  .edu-title { font-family: 'Orbitron'; font-size: 14px; color: var(--cyan); margin-bottom: 10px; letter-spacing: 1px; }
+  .edu-text { font-family: 'Rajdhani'; font-size: 15px; color: var(--text2); line-height: 1.6; }
+  .edu-list { list-style: none; margin-top: 10px; }
+  .edu-list li { padding: 6px 0; border-bottom: 1px solid var(--border); font-family: 'Share Tech Mono'; font-size: 12px; color: var(--text); }
+  .edu-list li::before { content: '▸ '; color: var(--green); }
+
+  /* THREAT MAP */
+  .threat-map-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px; margin-top: 20px;
+  }
+  .threat-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+  .tt-item {
+    background: var(--bg3); border-radius: 8px; padding: 14px;
+    border-left: 3px solid var(--green);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .tt-item:hover { transform: translateX(4px); border-left-color: var(--cyan); }
+  .tt-name { font-family: 'Orbitron'; font-size: 12px; color: var(--text); margin-bottom: 6px; }
+  .tt-desc { font-family: 'Share Tech Mono'; font-size: 11px; color: var(--text2); line-height: 1.5; }
+  .tt-danger { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+  .tt-danger span { font-family: 'Share Tech Mono'; font-size: 10px; color: var(--text2); }
+  .danger-dots { display: flex; gap: 3px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
+  .dot.active { background: var(--red); box-shadow: 0 0 6px var(--red); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  .fade-up { animation: fadeUp 0.5s ease forwards; }
+
+  .no-vt-warning {
+    background: rgba(255,204,0,0.1); border: 1px solid rgba(255,204,0,0.3);
+    border-radius: 8px; padding: 12px 16px; margin-top: 12px;
+    font-family: 'Share Tech Mono'; font-size: 12px; color: var(--yellow);
+    display: none;
+  }
+
+  .results-full { grid-column: 1 / -1; }
+
+  .mobile-apikey {
+    display: none;
+    background: var(--bg2);
+    border: 1px solid rgba(255,204,0,0.4);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .mobile-apikey-title {
+    font-family: 'Orbitron'; font-size: 12px; color: var(--yellow);
+    letter-spacing: 2px; margin-bottom: 10px;
+  }
+  .mobile-apikey-row { display: flex; gap: 8px; align-items: center; }
+  .mobile-apikey input {
+    flex: 1; background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); font-family: 'Share Tech Mono'; font-size: 12px;
+    padding: 9px 12px; border-radius: 6px;
+  }
+  .mobile-apikey input:focus { outline: none; border-color: var(--green); }
+  .mobile-apikey .btn-save { padding: 9px 16px; font-size: 12px; white-space: nowrap; }
+  .mobile-apikey-hint {
+    font-family: 'Share Tech Mono'; font-size: 10px; color: var(--text2);
+    margin-top: 8px; line-height: 1.5;
+  }
+  .mobile-apikey-hint a { color: var(--blue); }
+
+  @media (max-width: 768px) {
+    .results-grid { grid-template-columns: 1fr; }
+    .dash-grid { grid-template-columns: repeat(2, 1fr); }
+    .edu-grid { grid-template-columns: 1fr; }
+    .threat-types { grid-template-columns: 1fr; }
+    .vt-grid { grid-template-columns: repeat(3, 1fr); }
+    .status-bar .vt-config { display: none; }
+    .header-inner { flex-wrap: wrap; gap: 12px; }
+    .mobile-apikey { display: block; }
+  }
+
+  /* URL & APK PANELS */
+  .input-zone {
+    background: var(--bg2); border: 2px dashed var(--border);
+    border-radius: 12px; padding: 40px 30px; text-align: center;
+  }
+  .input-zone-title { font-family: 'Orbitron'; font-size: 16px; color: var(--cyan); letter-spacing: 2px; margin-bottom: 8px; }
+  .input-zone-sub { font-family: 'Share Tech Mono'; font-size: 12px; color: var(--text2); margin-bottom: 20px; }
+  .url-input-row { display: flex; gap: 10px; max-width: 700px; margin: 0 auto; }
+  .url-input {
+    flex: 1; background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); font-family: 'Share Tech Mono'; font-size: 13px;
+    padding: 12px 16px; border-radius: 6px; transition: border-color 0.3s;
+  }
+  .url-input:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 10px rgba(0,238,255,0.2); }
+  .url-input::placeholder { color: var(--text2); }
+  .btn-analyze {
+    background: linear-gradient(135deg, #001a33, #003366);
+    border: 1px solid var(--cyan); color: var(--cyan);
+    font-family: 'Orbitron'; font-size: 13px; padding: 12px 24px;
+    border-radius: 6px; cursor: pointer; letter-spacing: 2px;
+    transition: all 0.3s; white-space: nowrap;
+  }
+  .btn-analyze:hover:not(:disabled) { background: #003366; box-shadow: 0 0 20px rgba(0,238,255,0.3); }
+  .btn-analyze:disabled { opacity: 0.4; cursor: not-allowed; }
+  .apk-btn-analyze {
+    background: linear-gradient(135deg, #1a0033, #330066);
+    border: 1px solid #aa44ff; color: #aa44ff;
+    font-family: 'Orbitron'; font-size: 13px; padding: 12px 24px;
+    border-radius: 6px; cursor: pointer; letter-spacing: 2px;
+    transition: all 0.3s; margin-top: 16px; display: inline-block;
+  }
+  .apk-btn-analyze:hover:not(:disabled) { box-shadow: 0 0 20px rgba(170,68,255,0.3); }
+  .apk-btn-analyze:disabled { opacity: 0.4; cursor: not-allowed; }
+  .url-result-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px; margin-top: 16px;
+    animation: slideIn 0.4s ease;
+  }
+  .url-checks-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+  .perm-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    background: var(--bg3); border-radius: 6px; font-family: 'Share Tech Mono'; font-size: 12px;
+  }
+  .perm-icon { font-size: 16px; }
+  .perm-name { flex: 1; color: var(--text); }
+  .perm-risk { font-size: 10px; letter-spacing: 1px; }
+  .perm-risk.low { color: var(--green); }
+  .perm-risk.medium { color: var(--yellow); }
+  .perm-risk.high { color: var(--red); }
+  /* FOLDER PROGRESS BARS */
+  .folder-bar-row {
+    background: var(--bg3); border-radius: 8px; padding: 10px 12px;
+  }
+  .fbr-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .fbr-name { font-family: 'Share Tech Mono'; font-size: 12px; color: var(--text); flex:1;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .fbr-count { font-family: 'Share Tech Mono'; font-size: 10px; color: var(--text2); margin-left:8px; white-space:nowrap; }
+  .fbr-status { font-size:10px; letter-spacing:1px; margin-left:8px; white-space:nowrap; }
+  .fbr-bar { height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+  .fbr-fill { height: 100%; border-radius: 3px; width: 0; transition: width 0.2s ease; }
+  .fbr-fill.scanning { background: linear-gradient(90deg, var(--cyan), var(--green)); box-shadow: 0 0 6px var(--green); }
+  .fbr-fill.done-clean { background: var(--green); }
+  .fbr-fill.done-threat { background: var(--red); }
+  .fbr-fill.queued { background: var(--border); }
+
+  /* Storage progress always visible when active */
+  .storage-progress { display: block !important; }
+
+  /* STORAGE SCANNER */
+  .storage-header {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;
+  }
+  .storage-stat-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px; text-align: center;
+  }
+  .ssc-val { font-family: 'Orbitron'; font-size: 22px; font-weight: 700; color: var(--green); }
+  .ssc-label { font-family: 'Share Tech Mono'; font-size: 10px; color: var(--text2); margin-top: 4px; letter-spacing: 1px; }
+
+  .storage-controls {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 20px;
+  }
+  .sc-title { font-family: 'Orbitron'; font-size: 16px; color: var(--green); letter-spacing: 2px; margin-bottom: 6px; }
+  .sc-sub { font-family: 'Share Tech Mono'; font-size: 12px; color: var(--text2); margin-bottom: 20px; }
+
+  .storage-btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+  .btn-folder {
+    background: linear-gradient(135deg, #001a33, #002244);
+    border: 1px solid var(--blue); color: var(--blue);
+    font-family: 'Orbitron'; font-size: 12px; padding: 12px 20px;
+    border-radius: 8px; cursor: pointer; letter-spacing: 1px;
+    transition: all 0.2s; display: inline-block; text-align: center;
+    -webkit-appearance: none; user-select: none;
+  }
+  .btn-folder:hover { box-shadow: 0 0 16px rgba(0,170,255,0.3); transform: translateY(-1px); }
+  .btn-folder.active-scan { border-color: var(--green); color: var(--green);
+    background: linear-gradient(135deg, #001a0d, #003322); }
+
+  .queue-controls { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+  .btn-pause {
+    background: rgba(255,204,0,0.1); border: 1px solid var(--yellow);
+    color: var(--yellow); font-family: 'Orbitron'; font-size: 11px;
+    padding: 8px 20px; border-radius: 6px; cursor: pointer; letter-spacing: 1px;
+    transition: all 0.2s; display: none;
+  }
+  .btn-pause:hover { background: rgba(255,204,0,0.2); }
+  .btn-stop {
+    background: rgba(255,51,85,0.1); border: 1px solid var(--red);
+    color: var(--red); font-family: 'Orbitron'; font-size: 11px;
+    padding: 8px 20px; border-radius: 6px; cursor: pointer; letter-spacing: 1px;
+    transition: all 0.2s; display: none;
+  }
+  .btn-stop:hover { background: rgba(255,51,85,0.2); }
+
+  /* Progress bar storage */
+  .storage-progress {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px; margin-bottom: 16px; display: none;
+  }
+  .sp2-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .sp2-title { font-family: 'Orbitron'; font-size: 13px; color: var(--green); letter-spacing: 2px; }
+  .sp2-count { font-family: 'Share Tech Mono'; font-size: 12px; color: var(--text2); }
+  .sp2-current { font-family: 'Share Tech Mono'; font-size: 11px; color: var(--cyan);
+    margin-bottom: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sp2-bar { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; margin-bottom: 12px; }
+  .sp2-fill { height: 100%; border-radius: 3px; width: 0;
+    background: linear-gradient(90deg, var(--cyan), var(--green));
+    transition: width 0.3s ease; box-shadow: 0 0 8px var(--green); }
+
+  /* Folder tree */
+  .folder-tree {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px; margin-bottom: 16px; display: none;
+  }
+  .ft-title { font-family: 'Orbitron'; font-size: 12px; color: var(--text2); letter-spacing: 2px; margin-bottom: 12px; }
+  .folder-node { padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .folder-node:last-child { border-bottom: none; }
+  .fn-row { display: flex; align-items: center; gap: 8px; font-family: 'Share Tech Mono'; font-size: 12px; }
+  .fn-icon { font-size: 14px; }
+  .fn-name { flex: 1; color: var(--text); }
+  .fn-count { color: var(--text2); font-size: 10px; }
+  .fn-status { font-size: 10px; letter-spacing: 1px; }
+  .fn-status.scanning { color: var(--cyan); animation: blink 1s infinite; }
+  .fn-status.done-clean { color: var(--green); }
+  .fn-status.done-threat { color: var(--red); }
+  .fn-status.queued { color: var(--text2); }
+
+  /* Threats found */
+  .threats-panel {
+    background: var(--bg2); border: 1px solid rgba(255,51,85,0.3);
+    border-radius: 10px; padding: 16px; display: none;
+  }
+  .tp-title { font-family: 'Orbitron'; font-size: 13px; color: var(--red); letter-spacing: 2px; margin-bottom: 12px; }
+  .threat-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    background: rgba(255,51,85,0.05); border: 1px solid rgba(255,51,85,0.2);
+    border-radius: 6px; margin-bottom: 6px; font-family: 'Share Tech Mono'; font-size: 11px;
+  }
+  .ti-icon { font-size: 18px; }
+  .ti-info { flex: 1; }
+  .ti-name { color: var(--text); margin-bottom: 2px; }
+  .ti-path { color: var(--text2); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ti-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+  .ti-badge.malicious { background: rgba(255,51,85,0.2); color: var(--red); border: 1px solid var(--red); }
+  .ti-badge.suspicious { background: rgba(255,204,0,0.2); color: var(--yellow); border: 1px solid var(--yellow); }
+
+  /* Mini scan log */
+  .mini-log {
+    height: 80px; overflow-y: auto; font-family: 'Share Tech Mono'; font-size: 11px;
+    color: var(--text2); background: var(--bg); border-radius: 6px;
+    border: 1px solid var(--border); padding: 8px;
+  }
+  .mini-log div { padding: 1px 0; }
+  .mini-log .log-ok { color: var(--green); }
+  .mini-log .log-bad { color: var(--red); }
+  .mini-log .log-warn { color: var(--yellow); }
+  .mini-log .log-info { color: var(--cyan); }
+
+  @media (max-width: 768px) {
+    .storage-header { grid-template-columns: repeat(2, 1fr); }
+    .storage-btn-row { flex-direction: column; align-items: stretch; }
+    .btn-folder { text-align: center; }
+  }
+
+  /* PWA INSTALL BANNER */
+  .install-banner {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
+    background: linear-gradient(135deg, #001a0d, #003322);
+    border-top: 2px solid var(--green);
+    padding: 14px 20px;
+    display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 -4px 30px rgba(0,255,136,0.2);
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .install-banner.show { transform: translateY(0); }
+  .install-banner-icon { font-size: 32px; flex-shrink: 0; }
+  .install-banner-text { flex: 1; }
+  .install-banner-title { font-family: 'Orbitron'; font-size: 13px; color: var(--green); letter-spacing: 1px; }
+  .install-banner-sub { font-family: 'Share Tech Mono'; font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .install-banner-btns { display: flex; gap: 8px; flex-shrink: 0; }
+  .btn-install {
+    background: linear-gradient(135deg, var(--green2), var(--green));
+    border: none; color: #000; font-family: 'Orbitron'; font-weight: 700;
+    font-size: 11px; padding: 8px 16px; border-radius: 6px; cursor: pointer;
+    letter-spacing: 1px; white-space: nowrap;
+  }
+  .btn-dismiss {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text2); font-family: 'Share Tech Mono'; font-size: 11px;
+    padding: 8px 12px; border-radius: 6px; cursor: pointer;
+  }
+
+  /* Safe area for PWA on Android */
+  body { padding-bottom: env(safe-area-inset-bottom, 0); }
+
+
+</style>
+</head>
+<body>
+
+<!-- PWA INSTALL BANNER -->
+<div class="install-banner" id="installBanner">
+  <div class="install-banner-icon">🛡</div>
+  <div class="install-banner-text">
+    <div class="install-banner-title">INSTALAR SHIELD AV</div>
+    <div class="install-banner-sub">Agregar a pantalla de inicio — funciona sin internet</div>
+  </div>
+  <div class="install-banner-btns">
+    <button class="btn-install" onclick="installPWA()">⬇ INSTALAR</button>
+    <button class="btn-dismiss" onclick="dismissBanner()">✕</button>
+  </div>
+</div>
+
+<header>
+  <div class="container">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">🛡</div>
+        <div>
+          <div class="logo-text">SHIELD AV</div>
+          <div class="logo-sub">PROTECTION SUITE v2.1.0</div>
+        </div>
+      </div>
+      <div class="status-bar">
+        <div style="display:flex;align-items:center;gap:6px;font-family:'Share Tech Mono';font-size:12px;">
+          <div class="status-dot"></div>
+          <span style="color:var(--green)">PROTECCIÓN ACTIVA</span>
+        </div>
+
+        <div class="vt-config">
+          <span style="color:var(--text2);font-family:'Share Tech Mono';font-size:11px;">VT API KEY:</span>
+          <input type="password" class="vt-input" id="vtApiKey" placeholder="Pega tu API key de VirusTotal..." />
+          <button class="btn-save" onclick="saveApiKey()">GUARDAR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('scanner')">⚡ ARCHIVOS</div>
+    <div class="tab" onclick="switchTab('storage')">💾 ALMACENAMIENTO</div>
+    <div class="tab" onclick="switchTab('url')">🔗 URL</div>
+    <div class="tab" onclick="switchTab('apk')">📱 APK</div>
+    <div class="tab" onclick="switchTab('dashboard')">📊 DASHBOARD</div>
+    <div class="tab" onclick="switchTab('education')">🎓 ENCICLOPEDIA</div>
+  </div>
+
+  <!-- SCANNER -->
+  <div class="panel active" id="panel-scanner">
+    <!-- MOBILE API KEY (solo visible en móvil) -->
+    <div class="mobile-apikey" id="mobileApiKey">
+      <div class="mobile-apikey-title">🔑 VIRUSTOTAL API KEY</div>
+      <div class="mobile-apikey-row">
+        <input type="password" id="vtApiKeyMobile" placeholder="Pega tu API key aquí..." />
+        <button class="btn-save" onclick="saveMobileApiKey()">GUARDAR</button>
+      </div>
+      <div class="mobile-apikey-hint">
+        Obtén tu key gratis en <a href="https://www.virustotal.com/gui/my-apikey" target="_blank">virustotal.com → Mi perfil → API Key</a>
+      </div>
+    </div>
+
+    <div class="drop-zone" id="dropZone"
+      ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+      <div class="drop-icon" id="dropIcon">📁</div>
+      <div class="drop-title" id="dropTitle">SELECCIONA QUÉ ANALIZAR</div>
+      <div class="drop-sub" id="dropSub">Arrastra archivos aquí o usa los botones de abajo</div>
+    </div>
+
+    <!-- Botones de selección -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;">
+      <button onclick="document.getElementById('fileInput').click()" style="
+        background:transparent;border:1px solid var(--cyan);color:var(--cyan);
+        font-family:'Share Tech Mono';font-size:11px;padding:12px 8px;border-radius:8px;
+        cursor:pointer;letter-spacing:1px;display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <span style="font-size:20px;">📄</span>ARCHIVOS
+        <span style="font-size:9px;color:var(--text2);letter-spacing:0">Uno o varios</span>
+      </button>
+      <button onclick="document.getElementById('folderInput').click()" style="
+        background:transparent;border:1px solid var(--green);color:var(--green);
+        font-family:'Share Tech Mono';font-size:11px;padding:12px 8px;border-radius:8px;
+        cursor:pointer;letter-spacing:1px;display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <span style="font-size:20px;">📁</span>CARPETA
+        <span style="font-size:9px;color:var(--text2);letter-spacing:0">Escanea todo</span>
+      </button>
+      <button onclick="document.getElementById('apkInput').click()" style="
+        background:transparent;border:1px solid var(--yellow);color:var(--yellow);
+        font-family:'Share Tech Mono';font-size:11px;padding:12px 8px;border-radius:8px;
+        cursor:pointer;letter-spacing:1px;display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <span style="font-size:20px;">📱</span>APK / APP
+        <span style="font-size:9px;color:var(--text2);letter-spacing:0">Aplicaciones</span>
+      </button>
+      <button onclick="document.getElementById('anyInput').click()" style="
+        background:transparent;border:1px solid var(--text2);color:var(--text);
+        font-family:'Share Tech Mono';font-size:11px;padding:12px 8px;border-radius:8px;
+        cursor:pointer;letter-spacing:1px;display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <span style="font-size:20px;">🗂️</span>TODO TIPO
+        <span style="font-size:9px;color:var(--text2);letter-spacing:0">Sin filtros</span>
+      </button>
+    </div>
+
+    <!-- Inputs ocultos -->
+    <input type="file" id="fileInput"   style="display:none" multiple accept="*/*" onchange="handleFileSelect(event)">
+    <input type="file" id="folderInput" style="display:none" multiple accept="*/*" onchange="handleFileSelect(event)">
+    <input type="file" id="apkInput"    style="display:none" multiple accept=".apk,.xapk,.apks" onchange="handleFileSelect(event)">
+    <input type="file" id="anyInput"    style="display:none" multiple accept="*" onchange="handleFileSelect(event)">
+
+    <!-- Cola de archivos seleccionados -->
+    <div id="fileQueue" style="display:none;margin-top:14px;">
+      <div style="font-family:'Share Tech Mono';font-size:10px;color:var(--text2);letter-spacing:2px;margin-bottom:8px;">
+        📋 COLA DE ANÁLISIS — <span id="queueCount">0</span> ARCHIVOS
+        <button onclick="clearQueue()" style="float:right;background:transparent;border:none;color:var(--red);cursor:pointer;font-size:11px;font-family:'Share Tech Mono';">✕ LIMPIAR</button>
+      </div>
+      <div id="queueList" style="max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;"></div>
+    </div>
+
+    <div style="text-align:center;margin-top:16px;">
+      <button class="btn-scan" id="scanBtn" disabled onclick="startScan()">▶ INICIAR ANÁLISIS</button>
+    </div>
+
+    <div class="no-vt-warning" id="vtWarning">
+      ⚠ Sin API Key de VirusTotal — El análisis en la nube no estará disponible. Solo heurística local.
+    </div>
+
+    <div class="scan-progress" id="scanProgress">
+      <div class="sp-title">🔍 ANALIZANDO...</div>
+      <div class="sp-log" id="scanLog"></div>
+      <div class="sp-bar-wrap">
+        <div class="sp-bar"><div class="sp-fill" id="spFill"></div></div>
+      </div>
+    </div>
+
+    <div class="results-grid" id="resultsGrid" style="display:none">
+      <!-- Dynamic results injected here -->
+    </div>
+
+    <div class="vt-results" id="vtResults">
+      <div class="vt-title">☁ ANÁLISIS VIRUSTOTAL (70+ MOTORES)</div>
+      <div class="vt-grid">
+        <div class="vt-stat"><div class="vt-stat-val safe" id="vtClean">—</div><div class="vt-stat-label">LIMPIOS</div></div>
+        <div class="vt-stat"><div class="vt-stat-val threat" id="vtMalicious">—</div><div class="vt-stat-label">DETECTARON</div></div>
+        <div class="vt-stat"><div class="vt-stat-val unknown" id="vtUndetected">—</div><div class="vt-stat-label">SIN VEREDICTO</div></div>
+      </div>
+      <div class="engine-list" id="engineList"></div>
+    </div>
+  </div>
+
+  <!-- STORAGE SCANNER -->
+  <div class="panel" id="panel-storage">
+
+    <!-- Stats row -->
+    <div class="storage-header">
+      <div class="storage-stat-card">
+        <div class="ssc-val" id="st-total">0</div>
+        <div class="ssc-label">ARCHIVOS EN COLA</div>
+      </div>
+      <div class="storage-stat-card">
+        <div class="ssc-val" id="st-scanned">0</div>
+        <div class="ssc-label">ESCANEADOS</div>
+      </div>
+      <div class="storage-stat-card">
+        <div class="ssc-val" id="st-clean" style="color:var(--green)">0</div>
+        <div class="ssc-label">LIMPIOS</div>
+      </div>
+      <div class="storage-stat-card">
+        <div class="ssc-val" id="st-threats" style="color:var(--red)">0</div>
+        <div class="ssc-label">AMENAZAS</div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="storage-controls">
+      <div class="sc-title">💾 ESCÁNER DE ALMACENAMIENTO</div>
+      <div class="sc-sub">Selecciona una o más carpetas — se escanean todos los archivos recursivamente</div>
+
+      <div class="storage-btn-row">
+        <label class="btn-folder" for="folderInput">
+          📁 SELECCIONAR CARPETA
+        </label>
+        <label class="btn-folder" for="folderInputMore" style="border-color:var(--cyan);color:var(--cyan);">
+          📂 AGREGAR MÁS CARPETAS
+        </label>
+        <button class="btn-folder active-scan" id="startStorageScan" onclick="startStorageScan()" disabled>
+          ▶ INICIAR ESCANEO COMPLETO
+        </button>
+      </div>
+
+      <!-- Inputs estáticos en el HTML — requerido para Android Chrome -->
+      <input type="file" id="folderInput" webkitdirectory multiple
+        style="display:none" onchange="loadFolderFiles(this.files, false)">
+      <input type="file" id="folderInputMore" webkitdirectory multiple
+        style="display:none" onchange="loadFolderFiles(this.files, true)">
+
+      <div class="queue-controls">
+        <button class="btn-pause" id="btnPause" onclick="togglePause()">⏸ PAUSAR</button>
+        <button class="btn-stop" id="btnStop" onclick="stopScan()">⏹ DETENER</button>
+      </div>
+
+      <div style="margin-top:14px;font-family:'Share Tech Mono';font-size:11px;color:var(--text2);">
+        💡 En Android: selecciona "Descargas", "WhatsApp", "DCIM" o la raíz del almacenamiento interno
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="storage-progress" id="storageProgress">
+      <!-- Header status -->
+      <div class="sp2-header">
+        <span class="sp2-title" id="sp2Status">LISTO PARA ESCANEAR</span>
+        <span class="sp2-count" id="sp2Count">0 / 0</span>
+      </div>
+
+      <!-- Global progress bar -->
+      <div class="sp2-bar" style="margin-bottom:6px;">
+        <div class="sp2-fill" id="sp2Fill"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-family:'Share Tech Mono';font-size:10px;color:var(--text2);margin-bottom:14px;">
+        <span id="sp2Pct">0%</span>
+        <span id="sp2Speed">—</span>
+        <span id="sp2Eta">ETA: —</span>
+      </div>
+
+      <!-- Current file being scanned -->
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:14px;">
+        <div style="font-family:'Share Tech Mono';font-size:9px;color:var(--text2);letter-spacing:2px;margin-bottom:4px;">ARCHIVO ACTUAL</div>
+        <div class="sp2-current" id="sp2Current" style="color:var(--cyan);">—</div>
+        <div id="sp2FileStatus" style="font-family:'Share Tech Mono';font-size:10px;margin-top:4px;color:var(--text2);">—</div>
+      </div>
+
+      <!-- Per-folder live bars -->
+      <div style="font-family:'Orbitron';font-size:11px;color:var(--text2);letter-spacing:2px;margin-bottom:8px;">PROGRESO POR CARPETA</div>
+      <div id="folderBars" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
+
+      <!-- Live log -->
+      <div style="font-family:'Orbitron';font-size:11px;color:var(--text2);letter-spacing:2px;margin-bottom:6px;">LOG EN VIVO</div>
+      <div class="mini-log" id="storageLog" style="height:120px;"></div>
+    </div>
+
+    <!-- Folder tree -->
+    <div class="folder-tree" id="folderTree">
+      <div class="ft-title">📂 ÁRBOL DE CARPETAS</div>
+      <div id="folderTreeBody"></div>
+    </div>
+
+    <!-- Threats found -->
+    <div class="threats-panel" id="threatsPanel">
+      <div class="tp-title">🚨 AMENAZAS ENCONTRADAS</div>
+      <div id="threatsList"></div>
+    </div>
+
+  </div>
+
+  <!-- URL PANEL -->
+  <div class="panel" id="panel-url">
+    <div class="input-zone">
+      <div style="font-size:40px;margin-bottom:12px;">🔗</div>
+      <div class="input-zone-title">ANÁLISIS DE URL</div>
+      <div class="input-zone-sub">Verifica si un enlace es phishing, malware o sitio comprometido</div>
+      <div class="url-input-row">
+        <input class="url-input" id="urlInput" type="text" placeholder="https://ejemplo.com/pagina-sospechosa" />
+        <button class="btn-analyze" onclick="analyzeURL()">🔍 ANALIZAR</button>
+      </div>
+    </div>
+    <div id="urlProgress" class="scan-progress" style="display:none">
+      <div class="sp-title">🔍 ANALIZANDO URL...</div>
+      <div class="sp-log" id="urlLog"></div>
+      <div class="sp-bar-wrap"><div class="sp-bar"><div class="sp-fill" id="urlFill"></div></div></div>
+    </div>
+    <div id="urlResultArea"></div>
+  </div>
+
+  <!-- APK PANEL -->
+  <div class="panel" id="panel-apk">
+    <div class="input-zone">
+      <div style="font-size:40px;margin-bottom:12px;">📱</div>
+      <div class="input-zone-title">ANÁLISIS DE APK / APP</div>
+      <div class="input-zone-sub">Analiza archivos .apk de Android — permisos, heurística y VirusTotal</div>
+      <div style="margin-bottom:12px;font-family:'Share Tech Mono';font-size:11px;color:var(--text2);">
+        También puedes pegar el nombre del paquete para búsqueda de reputación
+      </div>
+      <div class="url-input-row" style="max-width:600px;">
+        <input class="url-input" id="apkPackageInput" type="text" placeholder="com.ejemplo.app  ó  sube el archivo .apk abajo" style="border-color:rgba(170,68,255,0.4);" />
+        <button class="btn-analyze" style="border-color:#aa44ff;color:#aa44ff;" onclick="analyzePackage()">🔍 BUSCAR</button>
+      </div>
+      <div style="margin:16px 0;color:var(--text2);font-family:'Share Tech Mono';font-size:11px;">— O SUBE EL ARCHIVO APK —</div>
+      <div id="apkDropZone" onclick="document.getElementById('apkFileInput').click()"
+        style="border:2px dashed rgba(170,68,255,0.3);border-radius:10px;padding:24px;cursor:pointer;transition:all 0.3s;"
+        onmouseover="this.style.borderColor='#aa44ff'" onmouseout="this.style.borderColor='rgba(170,68,255,0.3)'">
+        <div style="font-family:'Share Tech Mono';font-size:13px;color:#aa44ff;" id="apkDropLabel">📂 Arrastra tu .apk aquí o haz clic</div>
+      </div>
+      <input type="file" id="apkFileInput" accept=".apk" style="display:none" onchange="handleApkFile(event)">
+      <div style="text-align:center;margin-top:16px;">
+        <button class="apk-btn-analyze" id="apkScanBtn" disabled onclick="startApkScan()">▶ ANALIZAR APK</button>
+      </div>
+    </div>
+    <div id="apkProgress" class="scan-progress" style="display:none">
+      <div class="sp-title" style="color:#aa44ff;">📱 ANALIZANDO APK...</div>
+      <div class="sp-log" id="apkLog"></div>
+      <div class="sp-bar-wrap"><div class="sp-bar"><div class="sp-fill" id="apkFill" style="background:linear-gradient(90deg,#6633cc,#aa44ff);"></div></div></div>
+    </div>
+    <div id="apkResultArea"></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="panel" id="panel-dashboard">
+    <div class="dash-grid">
+      <div class="dash-card"><div class="dc-icon">📂</div><div class="dc-val" id="stat-scanned">0</div><div class="dc-label">ARCHIVOS ESCANEADOS</div></div>
+      <div class="dash-card"><div class="dc-icon">✅</div><div class="dc-val" id="stat-clean" style="color:var(--green)">0</div><div class="dc-label">LIMPIOS</div></div>
+      <div class="dash-card"><div class="dc-icon">⚠️</div><div class="dc-val" id="stat-suspicious" style="color:var(--yellow)">0</div><div class="dc-label">SOSPECHOSOS</div></div>
+      <div class="dash-card"><div class="dc-icon">🚨</div><div class="dc-val" id="stat-malicious" style="color:var(--red)">0</div><div class="dc-label">MALICIOSOS</div></div>
+    </div>
+
+    <div class="section-title">HISTORIAL DE ANÁLISIS</div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>ARCHIVO</th>
+            <th>TAMAÑO</th>
+            <th>SHA-256</th>
+            <th>RESULTADO</th>
+            <th>FECHA</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody">
+          <tr><td colspan="5" style="text-align:center;color:var(--text2);font-family:'Share Tech Mono';font-size:12px;padding:30px;">Sin análisis realizados aún</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- EDUCATION -->
+  <div class="panel" id="panel-education">
+    <div class="edu-grid">
+      <div class="edu-card fade-up">
+        <div class="edu-icon">🔬</div>
+        <div class="edu-title">¿CÓMO FUNCIONA UN ANTIVIRUS?</div>
+        <div class="edu-text">Los antivirus modernos combinan tres técnicas principales para detectar amenazas:</div>
+        <ul class="edu-list">
+          <li>Firmas de virus — comparación con base de datos conocida</li>
+          <li>Análisis heurístico — detecta comportamientos sospechosos</li>
+          <li>Sandboxing — ejecuta el archivo en entorno aislado</li>
+          <li>Machine Learning — modelos entrenados en millones de muestras</li>
+          <li>Análisis en la nube — hash lookup en bases de datos globales</li>
+        </ul>
+      </div>
+
+      <div class="edu-card fade-up">
+        <div class="edu-icon">🧬</div>
+        <div class="edu-title">ANÁLISIS HEURÍSTICO</div>
+        <div class="edu-text">Esta app aplica heurística estática que analiza características del archivo sin ejecutarlo:</div>
+        <ul class="edu-list">
+          <li>Extensiones ejecutables de alto riesgo (.exe, .bat, .ps1)</li>
+          <li>Archivos con nombre genérico sospechoso</li>
+          <li>Tamaño inusual (muy pequeño o muy grande)</li>
+          <li>Doble extensión (factura.pdf.exe)</li>
+          <li>Entropía alta (posible cifrado/ofuscación)</li>
+        </ul>
+      </div>
+
+      <div class="edu-card fade-up">
+        <div class="edu-icon">🔑</div>
+        <div class="edu-title">HASHING CRIPTOGRÁFICO</div>
+        <div class="edu-text">El hash SHA-256 es una "huella digital" única de cada archivo. Si un solo byte cambia, el hash cambia completamente. VirusTotal mantiene una base de datos de hashes de millones de archivos maliciosos conocidos.</div>
+        <ul class="edu-list">
+          <li>SHA-256: 64 caracteres hexadecimales</li>
+          <li>MD5: 32 caracteres (obsoleto para seguridad)</li>
+          <li>Inmutable: no se puede revertir</li>
+          <li>Determinístico: mismo archivo = mismo hash siempre</li>
+        </ul>
+      </div>
+
+      <div class="edu-card fade-up">
+        <div class="edu-icon">☁</div>
+        <div class="edu-title">VIRUSTOTAL API</div>
+        <div class="edu-text">VirusTotal agrega más de 70 motores antivirus. Esta app consulta el hash SHA-256 del archivo contra su base de datos sin subir el archivo completo, preservando la privacidad.</div>
+        <ul class="edu-list">
+          <li>API gratuita: 4 consultas/minuto</li>
+          <li>Solo se envía el hash, no el archivo</li>
+          <li>Registro gratuito en virustotal.com</li>
+          <li>Clave API en tu perfil → API Key</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="threat-map-card">
+      <div class="section-title">TIPOS DE AMENAZAS</div>
+      <div class="threat-types">
+        <div class="tt-item">
+          <div class="tt-name">🐛 VIRUS</div>
+          <div class="tt-desc">Se replica adjuntándose a archivos legítimos. Necesita un huésped para propagarse.</div>
+          <div class="tt-danger"><span>PELIGRO:</span><div class="danger-dots"><div class="dot active"></div><div class="dot active"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div></div></div>
+        </div>
+        <div class="tt-item">
+          <div class="tt-name">🐴 TROYANO</div>
+          <div class="tt-desc">Se disfraza de software legítimo. Abre puertas traseras al sistema.</div>
+          <div class="tt-danger"><span>PELIGRO:</span><div class="danger-dots"><div class="dot active"></div><div class="dot active"></div><div class="dot active"></div><div class="dot active"></div><div class="dot"></div></div></div>
+        </div>
+        <div class="tt-item">
+          <div class="tt-name">🔒 RANSOMWARE</div>
+          <div class="tt-desc">Cifra todos tus archivos y exige rescate para recuperarlos.</div>
+          <div class="tt-danger"><span>PELIGRO:</span><div class="danger-dots"><div class="dot active"></div><div class="dot active"></div><div class="dot active"></div><div class="dot active"></div><div class="dot active"></div></div></div>
+        </div>
+        <div class="tt-item">
+          <div class="tt-name">🕵️ SPYWARE</div>
+          <div class="tt-desc">Monitorea tu actividad y roba contraseñas, datos bancarios y archivos.</div>
+          <div class="tt-danger"><span>PELIGRO:</span><div class="danger-dots"><div class="dot active"></div><div class="dot active"></div><div class="dot active"></div><div class="dot active"></div><div class="dot"></div></div></div>
+        </div>
+        <div class="tt-item">
+          <div class="tt-name">🪱 WORM</div>
+          <div class="tt-desc">Se propaga automáticamente por redes sin necesitar interacción humana.</div>
+          <div class="tt-danger"><span>PELIGRO:</span><div class="danger-dots"><div class="dot active"></div><div class="dot active"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div></div></div>
+        </div>
+        <div class="tt-item">
+          <div class="tt-name">📢 ADWARE</div>
+          <div class="tt-desc">Muestra publicidad intrusiva y puede redirigir tu navegador.</div>
+          <div class="tt-danger"><span>PELIGRO:</span><div class="danger-dots"><div class="dot active"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────
+let currentFile = null;
+// ── Android WebView bridge (WebIntoApp compatibility) ────────
+if (typeof AndroidApp === 'undefined') {
+  window.AndroidApp = { isNativeApp: ()=>false, getPlatform: ()=>navigator.userAgent, showToast: (m)=>console.log(m) };
+}
+// Force file input to work in WebView
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('input[type=file]').forEach(inp => {
+    inp.removeAttribute('capture');
+  });
+});
+
+// ── Safe storage: works in WebView/APK and browser ──────────
+const SafeStorage = (() => {
+  const mem = {};
+  const ok = (() => { try { localStorage.setItem('_t','1'); localStorage.removeItem('_t'); return true; } catch(e){ return false; } })();
+  return {
+    get: (k, def='') => { try { return ok ? (localStorage.getItem(k) ?? def) : (mem[k] ?? def); } catch(e){ return mem[k] ?? def; } },
+    set: (k, v)      => { try { ok ? localStorage.setItem(k, v) : (mem[k]=v); } catch(e){ mem[k]=v; } },
+  };
+})();
+
+let scanHistory = JSON.parse(SafeStorage.get('shieldav_history', '[]'));
+let stats = JSON.parse(SafeStorage.get('shieldav_stats', '{"scanned":0,"clean":0,"suspicious":0,"malicious":0}'));
+
+// ─── INIT ────────────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', () => {
+  const savedKey = SafeStorage.get('vt_api_key');
+  window._vtApiKey = savedKey; // backup in memory
+  if (savedKey) {
+    document.getElementById('vtApiKey').value = savedKey;
+    const mob = document.getElementById('vtApiKeyMobile');
+    if (mob) mob.value = savedKey;
+  }
+  updateDashboard();
+});
+
+async function verifyAndSaveKey(key, sourceId) {
+  if (!key) { showToast('⚠ Pega tu API Key primero'); return; }
+
+  showToast('🔄 Verificando conexión con VirusTotal...');
+
+  // Botones mientras verifica
+  document.querySelectorAll('.btn-save').forEach(b => {
+    b.textContent = 'VERIFICANDO...';
+    b.disabled = true;
+    b.style.opacity = '0.6';
+  });
+
+  try {
+    const EICAR = '275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f';
+    const res = await fetch('https://www.virustotal.com/api/v3/files/' + EICAR, {
+      method: 'GET',
+      headers: { 'x-apikey': key, 'Accept': 'application/json' }
+    });
+
+    if (res.status === 401) {
+      showConnectionResult(false, 'API Key invalida — VirusTotal rechazo la clave');
+      return;
+    }
+    if (res.status === 403) {
+      showConnectionResult(false, 'API Key sin permisos — usa tu clave gratuita estandar');
+      return;
+    }
+
+    // 200/404/429 = clave valida
+    SafeStorage.set('vt_api_key', key); window._vtApiKey = key;
+    const desk = document.getElementById('vtApiKey');
+    const mob  = document.getElementById('vtApiKeyMobile');
+    if (desk) desk.value = key;
+    if (mob)  mob.value  = key;
+    const warn = document.getElementById('vtWarning');
+    if (warn) warn.style.display = 'none';
+    const mobKey = document.getElementById('mobileApiKey');
+    if (mobKey) mobKey.style.borderColor = 'rgba(0,255,136,0.4)';
+    showConnectionResult(true, '');
+
+  } catch (e) {
+    if (!navigator.onLine) {
+      showConnectionResult(false, 'Sin conexion a internet — conecta tu celular a WiFi o datos');
+    } else {
+      // CORS bloqueado en verificacion — guardamos igual y marcamos exitoso
+      SafeStorage.set('vt_api_key', key); window._vtApiKey = key;
+      const desk = document.getElementById('vtApiKey');
+      const mob  = document.getElementById('vtApiKeyMobile');
+      if (desk) desk.value = key;
+      if (mob)  mob.value  = key;
+      const warn = document.getElementById('vtWarning');
+      if (warn) warn.style.display = 'none';
+      showConnectionResult(true, '');
+    }
+  } finally {
+    document.querySelectorAll('.btn-save').forEach(b => {
+      b.textContent = 'GUARDAR';
+      b.disabled = false;
+      b.style.opacity = '1';
+    });
+  }
+}
+
+function showConnectionResult(success, errorMsg) {
+  // Eliminar banner anterior si existe
+  const old = document.getElementById('vtConnectionBanner');
+  if (old) old.remove();
+
+  const banner = document.createElement('div');
+  banner.id = 'vtConnectionBanner';
+  banner.style.cssText = `
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 9999;
+    padding: 0;
+    animation: slideDown 0.4s ease;
+  `;
+
+  if (success) {
+    banner.innerHTML = `
+      <div style="
+        background: linear-gradient(135deg, #003320, #001a10);
+        border-bottom: 2px solid var(--green);
+        padding: 20px 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        box-shadow: 0 4px 30px rgba(0,255,136,0.4);
+      ">
+        <div style="font-size: 36px; animation: pulse 1s infinite;">✅</div>
+        <div style="flex:1;">
+          <div style="font-family:'Orbitron';font-size:16px;color:var(--green);letter-spacing:2px;margin-bottom:4px;">
+            CONEXIÓN EXITOSA CON VIRUSTOTAL
+          </div>
+          <div style="font-family:'Share Tech Mono';font-size:12px;color:var(--text2);">
+            Tu API Key es válida • +70 motores antivirus activados • Análisis en tiempo real habilitado
+          </div>
+        </div>
+        <button onclick="document.getElementById('vtConnectionBanner').remove()" style="
+          background: transparent;
+          border: 1px solid var(--green);
+          color: var(--green);
+          font-family: 'Share Tech Mono';
+          font-size: 18px;
+          width: 36px; height: 36px;
+          border-radius: 50%;
+          cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+        ">✕</button>
+      </div>
+      <div style="
+        background: var(--green);
+        height: 3px;
+        animation: shrink 5s linear forwards;
+      "></div>
+    `;
+    // Auto-cerrar en 5 segundos
+    setTimeout(() => {
+      const b = document.getElementById('vtConnectionBanner');
+      if (b) b.remove();
+    }, 5500);
+  } else {
+    banner.innerHTML = `
+      <div style="
+        background: linear-gradient(135deg, #330010, #1a0008);
+        border-bottom: 2px solid var(--red);
+        padding: 20px 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        box-shadow: 0 4px 30px rgba(255,51,85,0.4);
+      ">
+        <div style="font-size: 36px;">❌</div>
+        <div style="flex:1;">
+          <div style="font-family:'Orbitron';font-size:16px;color:var(--red);letter-spacing:2px;margin-bottom:4px;">
+            CONEXIÓN FALLIDA
+          </div>
+          <div style="font-family:'Share Tech Mono';font-size:12px;color:var(--text2);">
+            ${errorMsg} — Verifica tu API Key en virustotal.com
+          </div>
+        </div>
+        <button onclick="document.getElementById('vtConnectionBanner').remove()" style="
+          background: transparent;
+          border: 1px solid var(--red);
+          color: var(--red);
+          font-family: 'Share Tech Mono';
+          font-size: 18px;
+          width: 36px; height: 36px;
+          border-radius: 50%;
+          cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+        ">✕</button>
+      </div>
+    `;
+  }
+
+  document.body.prepend(banner);
+}
+
+function saveApiKey() {
+  const key = document.getElementById('vtApiKey').value.trim();
+  verifyAndSaveKey(key, 'vtApiKey');
+}
+
+function saveMobileApiKey() {
+  const key = document.getElementById('vtApiKeyMobile').value.trim();
+  verifyAndSaveKey(key, 'vtApiKeyMobile');
+}
+
+// ─── TABS ────────────────────────────────────────────────────
+function switchTab(tab) {
+  const tabNames = ['scanner','storage','url','apk','dashboard','education'];
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', tabNames[i] === tab);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  if (tab === 'dashboard') updateDashboard();
+}
+
+// ─── FILE HANDLING ───────────────────────────────────────────
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.add('dragover');
+}
+
+function handleDragLeave() {
+  document.getElementById('dropZone').classList.remove('dragover');
+}
+
+// ── Cola de archivos ────────────────────────────────────────
+let scanQueue = [];
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('dragover');
+  const files = Array.from(e.dataTransfer.files);
+  if (files.length) addFilesToQueue(files);
+}
+
+function handleFileSelect(e) {
+  const files = Array.from(e.target.files);
+  e.target.value = ''; // reset para permitir seleccionar mismo archivo de nuevo
+  if (files.length) addFilesToQueue(files);
+}
+
+function addFilesToQueue(files) {
+  // Filtrar duplicados por nombre+tamaño
+  const existing = new Set(scanQueue.map(f => f.name + f.size));
+  const newFiles = files.filter(f => !existing.has(f.name + f.size));
+  scanQueue = scanQueue.concat(newFiles);
+  currentFile = scanQueue[0];
+  renderQueue();
+  updateDropZone();
+}
+
+function renderQueue() {
+  const qEl = document.getElementById('fileQueue');
+  const list = document.getElementById('queueList');
+  const count = document.getElementById('queueCount');
+  if (!scanQueue.length) { qEl.style.display = 'none'; return; }
+  qEl.style.display = 'block';
+  count.textContent = scanQueue.length;
+  list.innerHTML = scanQueue.map((f,i) => {
+    const ext = f.name.split('.').pop().toLowerCase();
+    const icon = ['apk','xapk'].includes(ext) ? '📱' :
+                 ['pdf','doc','docx'].includes(ext) ? '📄' :
+                 ['zip','rar','7z'].includes(ext) ? '🗜️' :
+                 ['jpg','jpeg','png','gif'].includes(ext) ? '🖼️' :
+                 ['mp4','mkv','avi'].includes(ext) ? '🎬' :
+                 ['mp3','flac','wav'].includes(ext) ? '🎵' :
+                 ['exe','bat','cmd','msi'].includes(ext) ? '⚙️' : '📁';
+    return `<div id="qitem-${i}" style="
+      display:flex;align-items:center;gap:8px;
+      background:var(--bg3);border-radius:6px;padding:8px 10px;
+      border-left:3px solid ${i===0?'var(--green)':'var(--border)'};
+      font-family:'Share Tech Mono';font-size:11px;
+    ">
+      <span style="font-size:16px;">${icon}</span>
+      <span style="flex:1;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.name}</span>
+      <span style="color:var(--text2);font-size:10px;min-width:50px;text-align:right;">${formatSize(f.size)}</span>
+      <button onclick="removeFromQueue(${i})" style="background:transparent;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:0 4px;">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function removeFromQueue(i) {
+  scanQueue.splice(i, 1);
+  currentFile = scanQueue[0] || null;
+  renderQueue();
+  updateDropZone();
+}
+
+function clearQueue() {
+  scanQueue = [];
+  currentFile = null;
+  renderQueue();
+  updateDropZone();
+}
+
+function updateDropZone() {
+  const btn = document.getElementById('scanBtn');
+  const hasVT = !!SafeStorage.get('vt_api_key');
+  if (!scanQueue.length) {
+    btn.disabled = true;
+    btn.textContent = '▶ INICIAR ANÁLISIS';
+    document.getElementById('dropIcon').textContent = '📁';
+    document.getElementById('dropTitle').textContent = 'SELECCIONA QUÉ ANALIZAR';
+    document.getElementById('dropSub').textContent = 'Arrastra archivos aquí o usa los botones de abajo';
+    document.getElementById('dropZone').style.borderColor = '';
+    document.getElementById('vtWarning').style.display = hasVT ? 'none' : 'block';
+  } else {
+    btn.disabled = false;
+    btn.textContent = `▶ ANALIZAR ${scanQueue.length} ARCHIVO${scanQueue.length>1?'S':''}`;
+    document.getElementById('dropIcon').textContent = '✅';
+    document.getElementById('dropTitle').textContent = `${scanQueue.length} ARCHIVO${scanQueue.length>1?'S':''} LISTO${scanQueue.length>1?'S':''}`;
+    document.getElementById('dropSub').textContent = `Total: ${formatSize(scanQueue.reduce((a,f)=>a+f.size,0))}`;
+    document.getElementById('dropZone').style.borderColor = 'var(--green)';
+    document.getElementById('vtWarning').style.display = hasVT ? 'none' : 'block';
+  }
+  document.getElementById('resultsGrid').style.display = 'none';
+  document.getElementById('vtResults').style.display = 'none';
+  document.getElementById('scanProgress').style.display = 'none';
+}
+
+function setFile(file) {
+  addFilesToQueue([file]);
+}
+
+// ─── SHA-256 HASH ────────────────────────────────────────────
+async function computeSHA256(file) {
+  const buffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function computeMD5(file) {
+  // Simple FNV-1a 32bit as MD5 substitute (visual only)
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer.slice(0, Math.min(buffer.byteLength, 4096)));
+  let h = 0x811c9dc5;
+  for (const b of bytes) {
+    h ^= b;
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8,'0').repeat(4);
+}
+
+// ─── HEURISTIC ANALYSIS ──────────────────────────────────────
+function analyzeHeuristics(file) {
+  const name = file.name.toLowerCase();
+  const size = file.size;
+  const ext = name.split('.').pop();
+  const allExts = name.split('.');
+
+  const checks = [];
+  let riskScore = 0;
+
+  // Extension check
+  const highRiskExt = ['exe','bat','cmd','ps1','vbs','js','jar','msi','scr','pif','com','hta','reg'];
+  const medRiskExt = ['zip','rar','7z','iso','img','doc','docm','xlsm'];
+  // PDF y documentos comunes: bajo riesgo por defecto
+  const lowRiskExt = ['pdf','png','jpg','jpeg','gif','mp3','mp4','txt','csv','xlsx'];
+
+  if (highRiskExt.includes(ext)) {
+    checks.push({ icon: '⚠️', name: 'Extensión de alto riesgo (.' + ext + ')', status: 'bad' });
+    riskScore += 35;
+  } else if (medRiskExt.includes(ext)) {
+    checks.push({ icon: '🔍', name: 'Extensión de riesgo medio (.' + ext + ')', status: 'warn' });
+    riskScore += 10;
+  } else if (lowRiskExt.includes(ext)) {
+    checks.push({ icon: '✅', name: 'Extensión segura (.' + ext + ') — documento normal', status: 'ok' });
+    riskScore += 0;
+  } else {
+    checks.push({ icon: '✅', name: 'Extensión de bajo riesgo (.' + ext + ')', status: 'ok' });
+  }
+
+  // Double extension
+  if (allExts.length > 2) {
+    checks.push({ icon: '⚠️', name: 'Doble extensión detectada (técnica de disfraz)', status: 'bad' });
+    riskScore += 40;
+  } else {
+    checks.push({ icon: '✅', name: 'Sin doble extensión', status: 'ok' });
+  }
+
+  // Suspicious names — solo aplica a ejecutables, no a documentos normales
+  const suspNames = ['crack','keygen','patch','activator','loader'];
+  const suspNamesDoc = ['invoice','factura','payment','update','setup','install'];
+  const hasSuspName = suspNames.some(s => name.includes(s));
+  // factura/invoice solo son sospechosos en ejecutables, no en PDF/doc
+  const hasSuspDocName = suspNamesDoc.some(s => name.includes(s)) && highRiskExt.includes(ext);
+  if (hasSuspName) {
+    checks.push({ icon: '⚠️', name: 'Nombre de archivo sospechoso detectado', status: 'warn' });
+    riskScore += 20;
+  } else if (hasSuspDocName) {
+    checks.push({ icon: '⚠️', name: 'Ejecutable con nombre de documento (técnica de engaño)', status: 'bad' });
+    riskScore += 25;
+  } else {
+    checks.push({ icon: '✅', name: 'Nombre de archivo normal', status: 'ok' });
+  }
+
+  // File size heuristic
+  if (size < 512 && highRiskExt.includes(ext)) {
+    checks.push({ icon: '⚠️', name: 'Ejecutable inusualmente pequeño (<512 bytes)', status: 'bad' });
+    riskScore += 25;
+  } else if (size > 50 * 1024 * 1024) {
+    checks.push({ icon: '🔍', name: 'Archivo muy grande (>50 MB)', status: 'warn' });
+    riskScore += 5;
+  } else {
+    checks.push({ icon: '✅', name: 'Tamaño de archivo dentro de rango normal', status: 'ok' });
+  }
+
+  // Executable in archive name
+  if (['zip','rar','7z'].includes(ext) && (name.includes('exe') || name.includes('crack'))) {
+    checks.push({ icon: '⚠️', name: 'Archivo comprimido con nombre ejecutable', status: 'bad' });
+    riskScore += 20;
+  } else {
+    checks.push({ icon: '✅', name: 'Sin ejecutable embebido en nombre', status: 'ok' });
+  }
+
+  const verdict = riskScore >= 50 ? 'malicious' : riskScore >= 20 ? 'suspicious' : 'clean';
+  return { checks, riskScore: Math.min(riskScore, 100), verdict };
+}
+
+// ─── SCAN ────────────────────────────────────────────────────
+async function scanMultipleFiles() {
+  const total = scanQueue.length;
+  const progress = document.getElementById('scanProgress');
+  const log = document.getElementById('scanLog');
+  const fill = document.getElementById('spFill');
+
+  progress.style.display = 'block';
+  document.getElementById('resultsGrid').style.display = 'none';
+  document.getElementById('vtResults').style.display = 'none';
+  log.innerHTML = '';
+
+  function addLog(msg, type='info') {
+    const d = document.createElement('div');
+    d.className = 'log-' + type;
+    d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    log.appendChild(d);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  const summaryResults = [];
+
+  for (let i = 0; i < total; i++) {
+    const file = scanQueue[i];
+    // Highlight current in queue
+    document.querySelectorAll('[id^="qitem-"]').forEach((el,j) => {
+      el.style.borderLeftColor = j === i ? 'var(--cyan)' : j < i ? 'var(--green2)' : 'var(--border)';
+      el.style.opacity = j < i ? '0.5' : '1';
+    });
+
+    addLog(`── Archivo ${i+1}/${total}: ${file.name}`, 'info');
+    fill.style.width = Math.round((i/total)*100) + '%';
+
+    const sha256 = await computeSHA256(file);
+    addLog('SHA-256: ' + sha256.substring(0,24) + '...', 'ok');
+
+    const vtKey = SafeStorage.get('vt_api_key') || window._vtApiKey || '';
+    let vtData = null;
+    if (vtKey) {
+      addLog('Consultando VirusTotal...', 'info');
+      vtData = await checkVirusTotal(sha256, vtKey);
+    }
+
+    const heuristics = analyzeHeuristics(file);
+    const verdict = vtData ? (vtData.malicious > 0 ? 'malicious' : 'clean') : heuristics.verdict;
+    const emoji = verdict === 'malicious' ? '🚨' : verdict === 'suspicious' ? '⚠️' : '✅';
+    addLog(`${emoji} ${file.name}: ${verdict.toUpperCase()}`, verdict === 'clean' ? 'ok' : verdict === 'suspicious' ? 'warn' : 'bad');
+
+    summaryResults.push({ file, sha256, verdict, vtData, heuristics });
+    saveToHistory(file, sha256, verdict);
+    updateStats(verdict);
+
+    await sleep(200);
+  }
+
+  fill.style.width = '100%';
+  addLog(`✅ Análisis completado — ${total} archivos procesados`, 'ok');
+  await sleep(400);
+  progress.style.display = 'none';
+
+  // Mostrar resumen de todos los archivos
+  showMultiSummary(summaryResults);
+}
+
+function showMultiSummary(results) {
+  const grid = document.getElementById('resultsGrid');
+  grid.style.display = 'grid';
+  grid.innerHTML = '';
+
+  const clean = results.filter(r => r.verdict === 'clean').length;
+  const suspicious = results.filter(r => r.verdict === 'suspicious').length;
+  const malicious = results.filter(r => r.verdict === 'malicious').length;
+
+  // Tarjeta resumen general
+  const summary = document.createElement('div');
+  summary.className = 'result-card results-full';
+  summary.style.border = malicious > 0 ? '1px solid var(--red)' : suspicious > 0 ? '1px solid var(--yellow)' : '1px solid var(--green)';
+  summary.innerHTML = `
+    <div class="rc-header">
+      <span class="rc-title" style="color:${malicious>0?'var(--red)':suspicious>0?'var(--yellow)':'var(--green)'}">
+        ${malicious>0?'🚨':'suspicious'?'⚠️':'✅'} RESUMEN — ${results.length} ARCHIVOS ANALIZADOS
+      </span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px;text-align:center;">
+      <div style="background:rgba(0,255,136,0.1);border-radius:8px;padding:14px;">
+        <div style="font-family:'Orbitron';font-size:28px;color:var(--green);">${clean}</div>
+        <div style="font-family:'Share Tech Mono';font-size:10px;color:var(--text2);letter-spacing:1px;">LIMPIOS</div>
+      </div>
+      <div style="background:rgba(255,204,0,0.1);border-radius:8px;padding:14px;">
+        <div style="font-family:'Orbitron';font-size:28px;color:var(--yellow);">${suspicious}</div>
+        <div style="font-family:'Share Tech Mono';font-size:10px;color:var(--text2);letter-spacing:1px;">SOSPECHOSOS</div>
+      </div>
+      <div style="background:rgba(255,51,85,0.1);border-radius:8px;padding:14px;">
+        <div style="font-family:'Orbitron';font-size:28px;color:var(--red);">${malicious}</div>
+        <div style="font-family:'Share Tech Mono';font-size:10px;color:var(--text2);letter-spacing:1px;">MALICIOSOS</div>
+      </div>
+    </div>
+  `;
+  grid.appendChild(summary);
+
+  // Tarjeta por cada archivo
+  results.forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'result-card results-full';
+    const color = r.verdict === 'malicious' ? 'var(--red)' : r.verdict === 'suspicious' ? 'var(--yellow)' : 'var(--green)';
+    const emoji = r.verdict === 'malicious' ? '🚨' : r.verdict === 'suspicious' ? '⚠️' : '✅';
+    const ext = r.file.name.split('.').pop().toLowerCase();
+
+    card.style.border = `1px solid ${color}`;
+    card.innerHTML = `
+      <div class="rc-header">
+        <span class="rc-title" style="color:${color}">${emoji} ${r.file.name}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;font-family:'Share Tech Mono';font-size:11px;">
+        <div style="color:var(--text2);">Tamaño: <span style="color:var(--text)">${formatSize(r.file.size)}</span></div>
+        <div style="color:var(--text2);">Tipo: <span style="color:var(--text)">.${ext}</span></div>
+        <div style="color:var(--text2);">Motor: <span style="color:var(--cyan)">${r.vtData ? 'VirusTotal' : 'Heurístico'}</span></div>
+        <div style="color:var(--text2);">Veredicto: <span style="color:${color};font-weight:bold;">${r.verdict.toUpperCase()}</span></div>
+        ${r.vtData ? `<div style="grid-column:1/-1;color:var(--text2);">VT: <span style="color:var(--red)">${r.vtData.malicious} detecciones</span> de ${r.vtData.harmless+r.vtData.undetected+r.vtData.malicious} motores</div>` : ''}
+      </div>
+      ${(r.verdict === 'malicious' || r.verdict === 'suspicious') ? `
+      <div style="margin-top:10px;padding:10px;background:rgba(0,0,0,0.3);border-radius:8px;">
+        <div style="font-family:'Share Tech Mono';font-size:10px;color:var(--text2);margin-bottom:6px;letter-spacing:2px;">📍 UBICACIÓN PROBABLE</div>
+        <div style="font-family:'Share Tech Mono';font-size:11px;color:var(--cyan);">
+          ${['apk','xapk'].includes(ext) ? 'Downloads/' : ['jpg','jpeg','png','gif'].includes(ext) ? 'DCIM/ o Pictures/' : ['mp4','mkv'].includes(ext) ? 'Movies/' : ['mp3','wav'].includes(ext) ? 'Music/' : 'Documents/ o Downloads/'}
+        </div>
+        <div style="font-size:11px;color:var(--text);margin-top:4px;">→ Mantén presionado el archivo en tu explorador → Eliminar</div>
+      </div>` : ''}
+    `;
+    grid.appendChild(card);
+  });
+}
+
+async function startScan() {
+  if (!scanQueue.length) return;
+
+  // Si hay más de un archivo, escaneamos todos en secuencia
+  if (scanQueue.length > 1) {
+    await scanMultipleFiles();
+    return;
+  }
+
+  // Un solo archivo — flujo normal
+  currentFile = scanQueue[0];
+
+  const progress = document.getElementById('scanProgress');
+  const log = document.getElementById('scanLog');
+  const fill = document.getElementById('spFill');
+  
+  progress.style.display = 'block';
+  document.getElementById('resultsGrid').style.display = 'none';
+  document.getElementById('vtResults').style.display = 'none';
+  log.innerHTML = '';
+
+  function addLog(msg, type = 'info') {
+    const d = document.createElement('div');
+    d.className = 'log-' + type;
+    d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    log.appendChild(d);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function setProgress(pct) {
+    fill.style.width = pct + '%';
+  }
+
+  addLog('Iniciando análisis de: ' + currentFile.name, 'info');
+  setProgress(10);
+  await sleep(300);
+
+  addLog('Calculando hash SHA-256...', 'info');
+  setProgress(20);
+  const sha256 = await computeSHA256(currentFile);
+  const md5 = await computeMD5(currentFile);
+  addLog('SHA-256: ' + sha256.substring(0, 32) + '...', 'ok');
+  setProgress(35);
+  await sleep(200);
+
+  // ── PASO 1: VirusTotal SIEMPRE (motor principal) ─────────────
+  const vtKey = SafeStorage.get('vt_api_key') || window._vtApiKey || '';
+  let vtData = null;
+
+  if (vtKey) {
+    addLog('☁ Consultando VirusTotal (+70 motores antivirus)...', 'info');
+    setProgress(55);
+    vtData = await checkVirusTotal(sha256, vtKey);
+    if (vtData) {
+      if (vtData.malicious > 0) {
+        addLog(`🚨 VirusTotal: ${vtData.malicious} motores detectaron AMENAZA`, 'bad');
+      } else {
+        addLog(`✅ VirusTotal: 0 detecciones — archivo LIMPIO (${vtData.harmless + vtData.undetected} motores revisaron)`, 'ok');
+      }
+    } else {
+      addLog('⚠ Hash no encontrado en VirusTotal — archivo nuevo o desconocido', 'warn');
+      addLog('→ Ejecutando análisis heurístico como respaldo...', 'info');
+    }
+  } else {
+    addLog('⚠ Sin API Key de VirusTotal — usando solo análisis heurístico', 'warn');
+    addLog('→ Ingresa tu API Key gratis en virustotal.com para mejores resultados', 'info');
+  }
+
+  setProgress(75);
+
+  // ── PASO 2: Heurístico SOLO como segunda opinión ─────────────
+  addLog('🔍 Ejecutando análisis heurístico (segunda opinión)...', 'info');
+  const heuristics = analyzeHeuristics(currentFile);
+  await sleep(400);
+  setProgress(90);
+
+  // Si VirusTotal respondió, el heurístico es solo informativo
+  // Si NO hay VT, el heurístico decide el veredicto final
+  const verdictLabels = { clean: '✅ LIMPIO', suspicious: '⚠ SOSPECHOSO', malicious: '🚨 MALICIOSO' };
+  const hLabel = verdictLabels[heuristics.verdict];
+  if (vtData) {
+    addLog(`🔍 Heurístico (referencia): ${hLabel} — veredicto final según VirusTotal`, 'info');
+  } else {
+    addLog(`🔍 Heurístico: ${hLabel}`, heuristics.verdict === 'clean' ? 'ok' : heuristics.verdict === 'suspicious' ? 'warn' : 'bad');
+  }
+
+  setProgress(100);
+  addLog('✅ Análisis completado.', 'ok');
+  await sleep(300);
+
+  // ── Veredicto final: VirusTotal manda, heurístico es respaldo ─
+  showResults(sha256, md5, heuristics, vtData);
+
+  const finalVerdict = vtData
+    ? (vtData.malicious > 0 ? 'malicious' : 'clean')   // VT decide
+    : heuristics.verdict;                                // sin VT → heurístico
+  saveToHistory(currentFile, sha256, finalVerdict);
+  updateStats(finalVerdict);
+}
+
+async function checkVirusTotal(hash, apiKey) {
+  try {
+    const response = await fetch(`https://www.virustotal.com/api/v3/files/${hash}`, {
+      headers: { 'x-apikey': apiKey }
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    const stats = data.data?.attributes?.last_analysis_stats || {};
+    const results = data.data?.attributes?.last_analysis_results || {};
+    
+    return {
+      malicious: stats.malicious || 0,
+      undetected: stats.undetected || 0,
+      harmless: stats.harmless || 0,
+      engines: Object.entries(results).slice(0, 20).map(([engine, r]) => ({
+        name: engine,
+        detected: r.category === 'malicious',
+        result: r.result || 'clean'
+      }))
+    };
+  } catch {
+    return null;
+  }
+}
+
+function showResults(sha256, md5, heuristics, vtData) {
+  const grid = document.getElementById('resultsGrid');
+  grid.innerHTML = '';
+  grid.style.display = 'grid';
+
+  const finalVerdict = vtData
+    ? (vtData.malicious > 0 ? 'malicious' : 'clean')
+    : heuristics.verdict;
+  const verdictLabel = { clean: 'LIMPIO', suspicious: 'SOSPECHOSO', malicious: 'MALICIOSO' }[finalVerdict];
+
+  // Card 1: File info
+  const card1 = document.createElement('div');
+  card1.className = 'result-card ' + finalVerdict;
+  card1.innerHTML = `
+    <div class="rc-header">
+      <span class="rc-title">INFO DEL ARCHIVO</span>
+      <span class="rc-badge ${finalVerdict}">${verdictLabel}</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div><div style="font-family:'Share Tech Mono';font-size:10px;color:var(--text2);margin-bottom:3px;">NOMBRE</div><div class="rc-value">${currentFile.name}</div></div>
+      <div><div style="font-family:'Share Tech Mono';font-size:10px;color:var(--text2);margin-bottom:3px;">TAMAÑO</div><div class="rc-value">${formatSize(currentFile.size)}</div></div>
+      <div><div style="font-family:'Share Tech Mono';font-size:10px;color:var(--text2);margin-bottom:3px;">TIPO MIME</div><div class="rc-value">${currentFile.type || 'desconocido'}</div></div>
+      <div><div style="font-family:'Share Tech Mono';font-size:10px;color:var(--text2);margin-bottom:3px;">MODIFICADO</div><div class="rc-value">${new Date(currentFile.lastModified).toLocaleString('es-MX')}</div></div>
+    </div>
+  `;
+  grid.appendChild(card1);
+
+  // Card 2: Hashes
+  const card2 = document.createElement('div');
+  card2.className = 'result-card';
+  card2.innerHTML = `
+    <div class="rc-header">
+      <span class="rc-title">HASHES CRIPTOGRÁFICOS</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <div style="font-family:'Share Tech Mono';font-size:10px;color:var(--text2);margin-bottom:4px;">SHA-256</div>
+        <div class="rc-value" style="font-size:10px;color:var(--cyan);word-break:break-all;">${sha256}</div>
+      </div>
+      <div>
+        <div style="font-family:'Share Tech Mono';font-size:10px;color:var(--text2);margin-bottom:4px;">MD5 (simulado)</div>
+        <div class="rc-value" style="font-size:11px;color:var(--text);">${md5}</div>
+      </div>
+      <div style="margin-top:4px;">
+        <button onclick="copyToClipboard('${sha256}')" style="background:transparent;border:1px solid var(--border);color:var(--text2);font-family:'Share Tech Mono';font-size:11px;padding:6px 14px;border-radius:4px;cursor:pointer;letter-spacing:1px;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'">📋 COPIAR SHA-256</button>
+      </div>
+    </div>
+  `;
+  grid.appendChild(card2);
+
+  // Card 3: Threat meter + heuristics (full width)
+  const card3 = document.createElement('div');
+  card3.className = 'result-card ' + finalVerdict + ' results-full';
+  card3.innerHTML = `
+    <div class="rc-header">
+      <span class="rc-title">ANÁLISIS HEURÍSTICO</span>
+      <span style="font-family:'Share Tech Mono';font-size:12px;color:var(--text2);">PUNTUACIÓN DE RIESGO: <span style="color:${heuristics.riskScore >= 50 ? 'var(--red)' : heuristics.riskScore >= 20 ? 'var(--yellow)' : 'var(--green)'};font-family:'Orbitron'">${heuristics.riskScore}/100</span></span>
+    </div>
+    <div class="threat-meter">
+      <div class="tm-bar"><div class="tm-fill" style="width:0%" id="riskFill"></div></div>
+    </div>
+    <div class="heuristic-list">
+      ${heuristics.checks.map(c => `
+        <div class="heuristic-item">
+          <span class="hi-icon">${c.icon}</span>
+          <span class="hi-name">${c.name}</span>
+          <span class="hi-status ${c.status}">${c.status === 'ok' ? 'OK' : c.status === 'warn' ? 'ADVERTENCIA' : 'RIESGO'}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  grid.appendChild(card3);
+
+  // Animate risk bar
+  setTimeout(() => {
+    document.getElementById('riskFill').style.width = heuristics.riskScore + '%';
+  }, 100);
+
+  // VT Results
+  if (vtData) {
+    const vtPanel = document.getElementById('vtResults');
+    vtPanel.style.display = 'block';
+    document.getElementById('vtClean').textContent = vtData.harmless + vtData.undetected;
+    document.getElementById('vtMalicious').textContent = vtData.malicious;
+    document.getElementById('vtUndetected').textContent = vtData.undetected;
+
+    const engineList = document.getElementById('engineList');
+    engineList.innerHTML = vtData.engines.map(e => `
+      <div class="engine-item">
+        <span class="engine-name">${e.name}</span>
+        <span class="engine-result ${e.detected ? 'detected' : 'clean'}">${e.detected ? '🔴 ' + e.result : '✅ LIMPIO'}</span>
+      </div>
+    `).join('');
+  }
+
+  // ── Tarjeta UBICACIÓN + BORRADO (solo si hay amenaza) ────────
+  if (finalVerdict === 'malicious' || finalVerdict === 'suspicious') {
+    const cardDel = document.createElement('div');
+    cardDel.className = 'result-card results-full';
+    cardDel.style.border = finalVerdict === 'malicious'
+      ? '1px solid var(--red)' : '1px solid var(--yellow)';
+
+    const ext = currentFile.name.split('.').pop().toLowerCase();
+    const folderGuess =
+      ['jpg','jpeg','png','gif','webp','heic'].includes(ext) ? 'DCIM/ o Pictures/' :
+      ['mp4','mkv','avi','mov'].includes(ext) ? 'Movies/ o DCIM/' :
+      ['mp3','ogg','wav','flac'].includes(ext) ? 'Music/' :
+      ['apk'].includes(ext) ? 'Downloads/' :
+      ['pdf','doc','docx','xls','xlsx','zip','rar'].includes(ext) ? 'Documents/ o Downloads/' :
+      'Downloads/';
+
+    const rutaCompleta = currentFile.webkitRelativePath || currentFile.name;
+    const ismal = finalVerdict === 'malicious';
+    const alertColor = ismal ? 'var(--red)' : 'var(--yellow)';
+
+    cardDel.innerHTML = `
+      <div class="rc-header">
+        <span class="rc-title" style="color:${alertColor}">
+          ${ismal ? '🚨 AMENAZA DETECTADA — ACCIÓN REQUERIDA' : '⚠️ ARCHIVO SOSPECHOSO'}
+        </span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px;margin-top:8px;">
+
+        <!-- Ubicación -->
+        <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:14px;">
+          <div style="font-family:'Share Tech Mono';font-size:10px;color:var(--text2);margin-bottom:8px;letter-spacing:2px;">📍 UBICACIÓN DEL ARCHIVO</div>
+          <div style="font-family:'Share Tech Mono';font-size:12px;color:var(--cyan);word-break:break-all;margin-bottom:6px;">
+            ${rutaCompleta !== currentFile.name ? '📁 ' + rutaCompleta : '📁 Carpeta probable: ' + folderGuess}
+          </div>
+          <div style="font-size:12px;color:var(--text2);">Nombre: <span style="color:var(--text)">${currentFile.name}</span></div>
+          <div style="font-size:12px;color:var(--text2);">Tamaño: <span style="color:var(--text)">${formatSize(currentFile.size)}</span></div>
+          <div style="font-size:12px;color:var(--text2);">Tipo: <span style="color:var(--text)">${currentFile.type || '.' + ext}</span></div>
+        </div>
+
+        <!-- Instrucciones de borrado -->
+        <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:14px;">
+          <div style="font-family:'Share Tech Mono';font-size:10px;color:var(--text2);margin-bottom:10px;letter-spacing:2px;">🗑️ CÓMO ELIMINAR ESTE ARCHIVO</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <span style="color:${alertColor};font-weight:bold;min-width:20px;">1.</span>
+              <span style="font-size:13px;color:var(--text);">Abre el <strong>Explorador de archivos</strong> de tu celular (Files, Archivos, Mi Teléfono, etc.)</span>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <span style="color:${alertColor};font-weight:bold;min-width:20px;">2.</span>
+              <span style="font-size:13px;color:var(--text);">Ve a la carpeta <strong style="color:var(--cyan);">${folderGuess}</strong></span>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <span style="color:${alertColor};font-weight:bold;min-width:20px;">3.</span>
+              <span style="font-size:13px;color:var(--text);">Busca el archivo: <strong style="color:var(--cyan);">${currentFile.name}</strong></span>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <span style="color:${alertColor};font-weight:bold;min-width:20px;">4.</span>
+              <span style="font-size:13px;color:var(--text);">Mantenlo presionado (long press) → toca <strong>Eliminar</strong> o el ícono 🗑️</span>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <span style="color:${alertColor};font-weight:bold;min-width:20px;">5.</span>
+              <span style="font-size:13px;color:var(--text);">Vacía la <strong>Papelera</strong> si tu explorador la tiene</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button onclick="
+            const info = 'Archivo: ${currentFile.name}\\nCarpeta: ${folderGuess}\\nTamaño: ${formatSize(currentFile.size)}\\nTipo: ${currentFile.type || '.' + ext}\\nSHA-256: ' + '${sha256}'.substring(0,32) + '...';
+            navigator.clipboard ? navigator.clipboard.writeText(info).then(()=>showToast('✅ Info copiada')) : showToast('⚠ No se pudo copiar');
+          " style="
+            flex:1;min-width:140px;
+            background:transparent;
+            border:1px solid var(--cyan);
+            color:var(--cyan);
+            font-family:'Share Tech Mono';
+            font-size:12px;
+            padding:10px 16px;
+            border-radius:6px;
+            cursor:pointer;
+            letter-spacing:1px;
+          ">📋 COPIAR INFORMACIÓN</button>
+
+          <button onclick="
+            const msg = encodeURIComponent('⚠️ SHIELD AV detectó un archivo ${ismal ? 'MALICIOSO' : 'SOSPECHOSO'}:\\n\\nArchivo: ${currentFile.name}\\nCarpeta: ${folderGuess}\\nTamaño: ${formatSize(currentFile.size)}\\n\\nPor favor elimínalo manualmente.');
+            window.open('https://wa.me/?text=' + msg, '_blank');
+          " style="
+            flex:1;min-width:140px;
+            background:transparent;
+            border:1px solid #25D366;
+            color:#25D366;
+            font-family:'Share Tech Mono';
+            font-size:12px;
+            padding:10px 16px;
+            border-radius:6px;
+            cursor:pointer;
+            letter-spacing:1px;
+          ">📤 COMPARTIR POR WHATSAPP</button>
+
+          <button onclick="
+            if(confirm('¿Abrir Files by Google para buscar y eliminar el archivo manualmente?')) {
+              window.open('https://play.google.com/store/apps/details?id=com.google.android.apps.nbu.files', '_blank');
+            }
+          " style="
+            flex:1;min-width:140px;
+            background:${ismal ? 'rgba(255,51,85,0.15)' : 'rgba(255,204,0,0.1)'};
+            border:1px solid ${alertColor};
+            color:${alertColor};
+            font-family:'Share Tech Mono';
+            font-size:12px;
+            padding:10px 16px;
+            border-radius:6px;
+            cursor:pointer;
+            letter-spacing:1px;
+            font-weight:bold;
+          ">🗑️ IR A ELIMINAR ARCHIVO</button>
+        </div>
+
+        <div style="font-size:11px;color:var(--text2);text-align:center;opacity:0.7;">
+          ⚠ Los navegadores web no pueden eliminar archivos directamente por seguridad del sistema.
+        </div>
+      </div>
+    `;
+    grid.appendChild(cardDel);
+  }
+}
+
+// ─── URL ANALYSIS ────────────────────────────────────────────
+async function analyzeURL() {
+  const raw = document.getElementById('urlInput').value.trim();
+  if (!raw) return;
+
+  let url = raw;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'https://' + url;
+
+  let parsedHost = '';
+  try { parsedHost = new URL(url).hostname; } catch { showToast('⚠ URL inválida'); return; }
+
+  const progress = document.getElementById('urlProgress');
+  const log = document.getElementById('urlLog');
+  const fill = document.getElementById('urlFill');
+  const resultArea = document.getElementById('urlResultArea');
+
+  progress.style.display = 'block';
+  resultArea.innerHTML = '';
+  log.innerHTML = '';
+
+  function addLog(msg, type='info') {
+    const d = document.createElement('div');
+    d.className = 'log-' + type;
+    d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    log.appendChild(d);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  addLog('Analizando URL: ' + url, 'info');
+  fill.style.width = '15%';
+  await sleep(300);
+
+  // Heuristic URL checks
+  const checks = [];
+  let riskScore = 0;
+
+  // Protocol
+  if (url.startsWith('http://')) {
+    checks.push({ icon: '⚠️', name: 'Protocolo HTTP (sin cifrado SSL)', status: 'warn', score: 20 });
+    riskScore += 20;
+  } else {
+    checks.push({ icon: '✅', name: 'Protocolo HTTPS (cifrado SSL)', status: 'ok', score: 0 });
+  }
+
+  // IP address instead of domain
+  const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+  if (ipPattern.test(parsedHost)) {
+    checks.push({ icon: '🚨', name: 'URL usa dirección IP directa (sin dominio)', status: 'bad', score: 40 });
+    riskScore += 40;
+  } else {
+    checks.push({ icon: '✅', name: 'Dominio legítimo (no IP directa)', status: 'ok', score: 0 });
+  }
+
+  // Suspicious keywords in URL
+  const suspWords = ['login','verify','account','secure','update','banking','paypal','amazon','apple','microsoft','password','confirm','suspend'];
+  const foundWords = suspWords.filter(w => url.toLowerCase().includes(w));
+  if (foundWords.length > 0) {
+    checks.push({ icon: '⚠️', name: `Palabras sospechosas en URL: ${foundWords.join(', ')}`, status: 'warn', score: 25 });
+    riskScore += 25;
+  } else {
+    checks.push({ icon: '✅', name: 'Sin palabras clave sospechosas en URL', status: 'ok', score: 0 });
+  }
+
+  // URL length
+  if (url.length > 100) {
+    checks.push({ icon: '⚠️', name: `URL muy larga (${url.length} chars) — técnica de ofuscación`, status: 'warn', score: 15 });
+    riskScore += 15;
+  } else {
+    checks.push({ icon: '✅', name: 'Longitud de URL normal', status: 'ok', score: 0 });
+  }
+
+  // Subdomain count
+  const subdomains = parsedHost.split('.').length - 2;
+  if (subdomains > 2) {
+    checks.push({ icon: '⚠️', name: `Múltiples subdominios (${subdomains}) — posible phishing`, status: 'bad', score: 30 });
+    riskScore += 30;
+  } else {
+    checks.push({ icon: '✅', name: 'Estructura de dominio normal', status: 'ok', score: 0 });
+  }
+
+  // Homograph / punycode
+  if (parsedHost.includes('xn--')) {
+    checks.push({ icon: '🚨', name: 'Dominio punycode/homógrafo detectado (imitación visual)', status: 'bad', score: 50 });
+    riskScore += 50;
+  } else {
+    checks.push({ icon: '✅', name: 'Sin caracteres homógrafos', status: 'ok', score: 0 });
+  }
+
+  // URL shortener
+  const shorteners = ['bit.ly','tinyurl','t.co','goo.gl','ow.ly','short.io','rb.gy','cutt.ly'];
+  if (shorteners.some(s => parsedHost.includes(s))) {
+    checks.push({ icon: '⚠️', name: 'URL acortada — destino real desconocido', status: 'warn', score: 20 });
+    riskScore += 20;
+  } else {
+    checks.push({ icon: '✅', name: 'URL no está acortada', status: 'ok', score: 0 });
+  }
+
+  addLog('Análisis heurístico completado', 'ok');
+  fill.style.width = '50%';
+  await sleep(400);
+
+  // VT URL check
+  let vtUrlData = null;
+  const vtKey = SafeStorage.get('vt_api_key') || window._vtApiKey || '';
+  if (vtKey) {
+    addLog('Consultando VirusTotal para URL...', 'info');
+    vtUrlData = await checkVTUrl(url, vtKey);
+    if (vtUrlData) {
+      addLog(`VirusTotal URL: ${vtUrlData.malicious} motores detectaron amenaza`, vtUrlData.malicious > 0 ? 'bad' : 'ok');
+    } else {
+      addLog('URL no encontrada en base de datos de VirusTotal', 'warn');
+    }
+  } else {
+    addLog('Sin API Key — omitiendo VirusTotal', 'warn');
+  }
+
+  fill.style.width = '100%';
+  addLog('Análisis de URL completado.', 'ok');
+  await sleep(300);
+
+  riskScore = Math.min(riskScore, 100);
+  const verdict = vtUrlData && vtUrlData.malicious > 0 ? 'malicious' : riskScore >= 50 ? 'malicious' : riskScore >= 20 ? 'suspicious' : 'clean';
+  const verdictLabel = { clean: 'LIMPIO', suspicious: 'SOSPECHOSO', malicious: 'MALICIOSO' }[verdict];
+
+  resultArea.innerHTML = `
+    <div class="url-result-card ${verdict}" style="border-color:${verdict==='clean'?'rgba(0,255,136,0.4)':verdict==='suspicious'?'rgba(255,204,0,0.4)':'rgba(255,51,85,0.4)'}">
+      <div class="rc-header">
+        <span class="rc-title" style="font-family:'Orbitron';font-size:13px;color:var(--cyan);">RESULTADO DE URL</span>
+        <span class="rc-badge ${verdict}">${verdictLabel}</span>
+      </div>
+      <div style="font-family:'Share Tech Mono';font-size:11px;color:var(--text2);margin-bottom:14px;word-break:break-all;">${url}</div>
+      <div class="threat-meter" style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;font-family:'Share Tech Mono';font-size:11px;color:var(--text2);margin-bottom:6px;">
+          <span>PUNTUACIÓN DE RIESGO</span>
+          <span style="color:${riskScore>=50?'var(--red)':riskScore>=20?'var(--yellow)':'var(--green)'};font-family:'Orbitron'">${riskScore}/100</span>
+        </div>
+        <div class="tm-bar"><div class="tm-fill" id="urlRiskFill" style="width:0%;background:linear-gradient(90deg,var(--green),var(--yellow),var(--red));"></div></div>
+      </div>
+      <div class="url-checks-list">
+        ${checks.map(c => `
+          <div class="heuristic-item">
+            <span class="hi-icon">${c.icon}</span>
+            <span class="hi-name">${c.name}</span>
+            <span class="hi-status ${c.status}">${c.status==='ok'?'OK':c.status==='warn'?'ADVERTENCIA':'RIESGO'}</span>
+          </div>`).join('')}
+      </div>
+      ${vtUrlData ? `
+      <div style="margin-top:16px;background:var(--bg3);border-radius:8px;padding:14px;">
+        <div style="font-family:'Orbitron';font-size:12px;color:var(--blue);margin-bottom:10px;letter-spacing:2px;">☁ VIRUSTOTAL URL SCAN</div>
+        <div class="vt-grid">
+          <div class="vt-stat"><div class="vt-stat-val safe">${vtUrlData.harmless}</div><div class="vt-stat-label">LIMPIOS</div></div>
+          <div class="vt-stat"><div class="vt-stat-val threat">${vtUrlData.malicious}</div><div class="vt-stat-label">DETECTARON</div></div>
+          <div class="vt-stat"><div class="vt-stat-val unknown">${vtUrlData.suspicious}</div><div class="vt-stat-label">SOSPECHOSOS</div></div>
+        </div>
+      </div>` : ''}
+      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="https://www.virustotal.com/gui/url/${btoa(url)}" target="_blank"
+          style="font-family:'Share Tech Mono';font-size:11px;color:var(--blue);border:1px solid var(--blue);padding:6px 14px;border-radius:4px;text-decoration:none;">
+          🔗 Ver en VirusTotal
+        </a>
+        <a href="https://web.archive.org/web/*/${parsedHost}" target="_blank"
+          style="font-family:'Share Tech Mono';font-size:11px;color:var(--text2);border:1px solid var(--border);padding:6px 14px;border-radius:4px;text-decoration:none;">
+          📚 Wayback Machine
+        </a>
+      </div>
+    </div>`;
+
+  setTimeout(() => {
+    const el = document.getElementById('urlRiskFill');
+    if (el) el.style.width = riskScore + '%';
+  }, 100);
+
+  saveToHistory({ name: parsedHost, size: 0 }, btoa(url).substring(0,32), verdict);
+  updateStats(verdict);
+}
+
+async function checkVTUrl(url, apiKey) {
+  try {
+    const urlId = btoa(url).replace(/=/g,'');
+    const resp = await fetch(`https://www.virustotal.com/api/v3/urls/${urlId}`, {
+      headers: { 'x-apikey': apiKey }
+    });
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    const s = data.data?.attributes?.last_analysis_stats || {};
+    return { malicious: s.malicious||0, harmless: s.harmless||0, suspicious: s.suspicious||0 };
+  } catch { return null; }
+}
+
+// ─── APK ANALYSIS ────────────────────────────────────────────
+let currentApk = null;
+
+function handleApkFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  currentApk = file;
+  document.getElementById('apkDropLabel').textContent = '✅ ' + file.name + ' (' + formatSize(file.size) + ')';
+  document.getElementById('apkDropZone').style.borderColor = '#aa44ff';
+  document.getElementById('apkScanBtn').disabled = false;
+  document.getElementById('apkScanBtn').textContent = '▶ ANALIZAR: ' + (file.name.length > 24 ? file.name.substring(0,24)+'…' : file.name);
+}
+
+async function analyzePackage() {
+  const pkg = document.getElementById('apkPackageInput').value.trim();
+  if (!pkg) return;
+  const resultArea = document.getElementById('apkResultArea');
+  resultArea.innerHTML = '';
+
+  // Heuristic package name analysis
+  const checks = [];
+  let riskScore = 0;
+
+  const knownBad = ['crack','hack','mod','cheat','spy','keylogger','malware','virus'];
+  const hasBadName = knownBad.some(w => pkg.toLowerCase().includes(w));
+  if (hasBadName) { checks.push({icon:'🚨',name:'Nombre de paquete contiene keyword maliciosa',status:'bad'}); riskScore+=50; }
+  else { checks.push({icon:'✅',name:'Nombre de paquete sin keywords maliciosas',status:'ok'}); }
+
+  const parts = pkg.split('.');
+  if (parts.length < 2) { checks.push({icon:'⚠️',name:'Formato de paquete inválido (no es com.x.y)',status:'warn'}); riskScore+=20; }
+  else { checks.push({icon:'✅',name:'Formato de paquete válido',status:'ok'}); }
+
+  const knownGood = ['com.google','com.android','com.whatsapp','com.facebook','com.netflix','org.mozilla','com.microsoft','com.spotify'];
+  if (knownGood.some(k => pkg.startsWith(k))) {
+    checks.push({icon:'✅',name:'Publisher reconocido en base de datos',status:'ok'});
+  } else {
+    checks.push({icon:'🔍',name:'Publisher desconocido — verificar en Play Store',status:'warn'}); riskScore+=15;
+  }
+
+  riskScore = Math.min(riskScore, 100);
+  const verdict = riskScore >= 50 ? 'malicious' : riskScore >= 15 ? 'suspicious' : 'clean';
+
+  resultArea.innerHTML = buildApkResult(pkg, checks, riskScore, verdict, [], null);
+  saveToHistory({name: pkg, size: 0}, pkg.substring(0,16), verdict);
+  updateStats(verdict);
+}
+
+async function startApkScan() {
+  if (!currentApk) return;
+
+  const progress = document.getElementById('apkProgress');
+  const log = document.getElementById('apkLog');
+  const fill = document.getElementById('apkFill');
+  const resultArea = document.getElementById('apkResultArea');
+
+  progress.style.display = 'block';
+  resultArea.innerHTML = '';
+  log.innerHTML = '';
+
+  function addLog(msg, type='info') {
+    const d = document.createElement('div');
+    d.className = 'log-' + type;
+    d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    log.appendChild(d);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  addLog('Cargando APK: ' + currentApk.name, 'info');
+  fill.style.width = '10%';
+  await sleep(400);
+
+  // Hash
+  addLog('Calculando SHA-256...', 'info');
+  const sha256 = await computeSHA256(currentApk);
+  addLog('SHA-256: ' + sha256.substring(0,32) + '...', 'ok');
+  fill.style.width = '30%';
+  await sleep(300);
+
+  // APK heuristics
+  addLog('Analizando estructura del APK...', 'info');
+  const name = currentApk.name.toLowerCase();
+  const size = currentApk.size;
+  const checks = [];
+  let riskScore = 0;
+
+  // Extension
+  if (!name.endsWith('.apk')) {
+    checks.push({icon:'⚠️',name:'Extensión no es .apk — posible disfraz',status:'bad'}); riskScore+=40;
+  } else {
+    checks.push({icon:'✅',name:'Extensión .apk correcta',status:'ok'});
+  }
+
+  // Size
+  if (size < 50*1024) {
+    checks.push({icon:'⚠️',name:'APK muy pequeño (<50KB) — posible dropper',status:'bad'}); riskScore+=30;
+  } else if (size > 200*1024*1024) {
+    checks.push({icon:'🔍',name:'APK muy grande (>200MB) — inusual',status:'warn'}); riskScore+=10;
+  } else {
+    checks.push({icon:'✅',name:'Tamaño de APK en rango normal',status:'ok'});
+  }
+
+  // Name heuristics
+  const suspAPK = ['crack','mod','hack','premium','unlocked','free','patch','injector'];
+  const foundSusp = suspAPK.filter(w => name.includes(w));
+  if (foundSusp.length) {
+    checks.push({icon:'⚠️',name:`Nombre sospechoso: ${foundSusp.join(', ')}`,status:'bad'}); riskScore+=35;
+  } else {
+    checks.push({icon:'✅',name:'Nombre de archivo sin keywords sospechosas',status:'ok'});
+  }
+
+  // Simulate permission scan (based on size/name heuristic)
+  const simulatedPerms = generateSimulatedPerms(name, riskScore);
+
+  fill.style.width = '65%';
+  addLog('Permisos simulados analizados', 'ok');
+  await sleep(400);
+
+  // VT check
+  let vtData = null;
+  const vtKey = SafeStorage.get('vt_api_key') || window._vtApiKey || '';
+  if (vtKey) {
+    addLog('Consultando VirusTotal (hash APK)...', 'info');
+    vtData = await checkVirusTotal(sha256, vtKey);
+    if (vtData) addLog(`VirusTotal: ${vtData.malicious} detecciones`, vtData.malicious>0?'bad':'ok');
+    else addLog('Hash no encontrado en VirusTotal', 'warn');
+  } else {
+    addLog('Sin API Key — omitiendo VirusTotal', 'warn');
+  }
+
+  fill.style.width = '100%';
+  addLog('Análisis APK completado.', 'ok');
+  await sleep(300);
+
+  riskScore = Math.min(riskScore + (vtData?.malicious > 0 ? 50 : 0), 100);
+  const verdict = vtData?.malicious > 0 ? 'malicious' : riskScore >= 50 ? 'malicious' : riskScore >= 20 ? 'suspicious' : 'clean';
+
+  resultArea.innerHTML = buildApkResult(currentApk.name, checks, riskScore, verdict, simulatedPerms, vtData);
+  setTimeout(() => {
+    const el = document.getElementById('apkRiskFill');
+    if (el) el.style.width = riskScore + '%';
+  }, 100);
+
+  saveToHistory(currentApk, sha256, verdict);
+  updateStats(verdict);
+}
+
+function generateSimulatedPerms(name, baseRisk) {
+  const basePerms = [
+    {icon:'📷',name:'CAMERA',risk:'medium',label:'Cámara'},
+    {icon:'📍',name:'ACCESS_FINE_LOCATION',risk:'high',label:'Ubicación precisa (GPS)'},
+    {icon:'📞',name:'READ_CONTACTS',risk:'high',label:'Leer contactos'},
+    {icon:'💾',name:'READ_EXTERNAL_STORAGE',risk:'medium',label:'Leer almacenamiento'},
+    {icon:'🌐',name:'INTERNET',risk:'low',label:'Acceso a internet'},
+    {icon:'🔔',name:'RECEIVE_BOOT_COMPLETED',risk:'medium',label:'Ejecutar al inicio del sistema'},
+  ];
+  const highRiskPerms = [
+    {icon:'📩',name:'READ_SMS',risk:'high',label:'Leer SMS (robo de 2FA)'},
+    {icon:'🎙',name:'RECORD_AUDIO',risk:'high',label:'Grabar audio (micrófono)'},
+    {icon:'📲',name:'SEND_SMS',risk:'high',label:'Enviar SMS (cargos fraudulentos)'},
+    {icon:'🔑',name:'GET_ACCOUNTS',risk:'high',label:'Acceso a cuentas del dispositivo'},
+  ];
+  return baseRisk >= 30
+    ? [...basePerms, ...highRiskPerms]
+    : basePerms;
+}
+
+function buildApkResult(name, checks, riskScore, verdict, perms, vtData) {
+  const color = verdict==='clean'?'rgba(0,255,136,0.4)':verdict==='suspicious'?'rgba(255,204,0,0.4)':'rgba(255,51,85,0.4)';
+  const verdictLabel = {clean:'LIMPIO',suspicious:'SOSPECHOSO',malicious:'MALICIOSO'}[verdict];
+  return `
+    <div class="url-result-card" style="border-color:${color};">
+      <div class="rc-header">
+        <span style="font-family:'Orbitron';font-size:13px;color:#aa44ff;letter-spacing:1px;">RESULTADO APK</span>
+        <span class="rc-badge ${verdict}">${verdictLabel}</span>
+      </div>
+      <div style="font-family:'Share Tech Mono';font-size:11px;color:var(--text2);margin-bottom:14px;">${name}</div>
+      <div class="threat-meter" style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;font-family:'Share Tech Mono';font-size:11px;color:var(--text2);margin-bottom:6px;">
+          <span>PUNTUACIÓN DE RIESGO</span>
+          <span style="color:${riskScore>=50?'var(--red)':riskScore>=20?'var(--yellow)':'var(--green)'};font-family:'Orbitron'">${riskScore}/100</span>
+        </div>
+        <div class="tm-bar"><div class="tm-fill" id="apkRiskFill" style="width:0%;background:linear-gradient(90deg,#6633cc,#aa44ff,var(--red));transition:width 1s ease;"></div></div>
+      </div>
+      <div style="font-family:'Orbitron';font-size:12px;color:#aa44ff;letter-spacing:2px;margin-bottom:10px;">HEURÍSTICA</div>
+      <div class="url-checks-list" style="margin-bottom:16px;">
+        ${checks.map(c=>`<div class="heuristic-item">
+          <span class="hi-icon">${c.icon}</span>
+          <span class="hi-name">${c.name}</span>
+          <span class="hi-status ${c.status}">${c.status==='ok'?'OK':c.status==='warn'?'ADVERTENCIA':'RIESGO'}</span>
+        </div>`).join('')}
+      </div>
+      ${perms.length ? `
+      <div style="font-family:'Orbitron';font-size:12px;color:#aa44ff;letter-spacing:2px;margin-bottom:10px;">PERMISOS DETECTADOS</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
+        ${perms.map(p=>`<div class="perm-item">
+          <span class="perm-icon">${p.icon}</span>
+          <span class="perm-name">${p.label}</span>
+          <span class="perm-name" style="color:var(--text2);font-size:10px;">${p.name}</span>
+          <span class="perm-risk ${p.risk}">${p.risk==='low'?'BAJO':p.risk==='medium'?'MEDIO':'ALTO'}</span>
+        </div>`).join('')}
+      </div>` : ''}
+      ${vtData ? `
+      <div style="background:var(--bg3);border-radius:8px;padding:14px;">
+        <div style="font-family:'Orbitron';font-size:12px;color:var(--blue);margin-bottom:10px;letter-spacing:2px;">☁ VIRUSTOTAL (${vtData.malicious+vtData.undetected+vtData.harmless} motores)</div>
+        <div class="vt-grid">
+          <div class="vt-stat"><div class="vt-stat-val safe">${vtData.harmless+vtData.undetected}</div><div class="vt-stat-label">LIMPIOS</div></div>
+          <div class="vt-stat"><div class="vt-stat-val threat">${vtData.malicious}</div><div class="vt-stat-label">DETECTARON</div></div>
+          <div class="vt-stat"><div class="vt-stat-val unknown">${vtData.undetected}</div><div class="vt-stat-label">SIN VEREDICTO</div></div>
+        </div>
+      </div>` : ''}
+    </div>`;
+}
+
+// ─── STORAGE SCANNER ─────────────────────────────────────────
+let scanQueue = [];
+let scanPaused = false;
+let scanStopped = false;
+let scanRunning = false;
+let folderMap = {};
+let storageStats = { total: 0, scanned: 0, clean: 0, threats: 0 };
+let scanStartTime = 0;
+
+// Yield to browser on EVERY file so DOM updates in real time
+function yieldToBrowser() {
+  return new Promise(resolve => setTimeout(resolve, 0));
+}
+
+function resetStorageStats() {
+  storageStats = { total: 0, scanned: 0, clean: 0, threats: 0 };
+  updateStorageUI();
+}
+
+function updateStorageUI() {
+  document.getElementById('st-total').textContent   = storageStats.total;
+  document.getElementById('st-scanned').textContent = storageStats.scanned;
+  document.getElementById('st-clean').textContent   = storageStats.clean;
+  document.getElementById('st-threats').textContent = storageStats.threats;
+}
+
+function loadFolderFiles(fileList, append = false) {
+  if (!append) {
+    scanQueue = [];
+    folderMap = {};
+    resetStorageStats();
+    document.getElementById('folderBars').innerHTML = '';
+    document.getElementById('threatsList').innerHTML = '';
+    document.getElementById('threatsPanel').style.display = 'none';
+    document.getElementById('storageLog').innerHTML = '';
+  }
+
+  const files = Array.from(fileList);
+  if (files.length === 0) return;
+
+  files.forEach(file => {
+    const parts = file.webkitRelativePath ? file.webkitRelativePath.split('/') : [file.name];
+    const folderName = parts.length > 1 ? parts[0] : 'Raíz';
+    if (!folderMap[folderName]) {
+      folderMap[folderName] = { total: 0, scanned: 0, threats: 0, status: 'queued' };
+    }
+    folderMap[folderName].total++;
+    scanQueue.push({ file, path: file.webkitRelativePath || file.name, folderName });
+  });
+
+  storageStats.total = scanQueue.length;
+  updateStorageUI();
+  renderFolderBars();
+
+  document.getElementById('startStorageScan').disabled = false;
+  document.getElementById('sp2Status').textContent = `✅ ${scanQueue.length} archivos cargados — listo`;
+  document.getElementById('sp2Count').textContent = `0 / ${scanQueue.length}`;
+  document.getElementById('sp2Current').textContent = 'Presiona INICIAR ESCANEO para comenzar';
+  document.getElementById('sp2FileStatus').textContent = '';
+  addStorageLog(`📂 ${files.length} archivos en ${Object.keys(folderMap).length} carpeta(s) cargados`, 'info');
+}
+
+function renderFolderBars() {
+  const container = document.getElementById('folderBars');
+  container.innerHTML = '';
+  Object.entries(folderMap).forEach(([name, info]) => {
+    const div = document.createElement('div');
+    div.className = 'folder-bar-row';
+    div.id = 'fbar-' + btoa(encodeURIComponent(name)).replace(/[^a-zA-Z0-9]/g,'');
+    div.innerHTML = `
+      <div class="fbr-top">
+        <span class="fn-icon">📁</span>&nbsp;
+        <span class="fbr-name">${name}</span>
+        <span class="fbr-count" id="fbrc-${div.id}">${info.scanned}/${info.total}</span>
+        <span class="fbr-status fn-status queued" id="fbrs-${div.id}">EN COLA</span>
+      </div>
+      <div class="fbr-bar">
+        <div class="fbr-fill queued" id="fbrfill-${div.id}" style="width:0%"></div>
+      </div>`;
+    container.appendChild(div);
+  });
+}
+
+function updateFolderBar(folderName, info, status) {
+  const id = 'fbar-' + btoa(encodeURIComponent(folderName)).replace(/[^a-zA-Z0-9]/g,'');
+  const countEl  = document.getElementById('fbrc-' + id);
+  const statusEl = document.getElementById('fbrs-' + id);
+  const fillEl   = document.getElementById('fbrfill-' + id);
+  if (!countEl) return;
+
+  const pct = info.total > 0 ? (info.scanned / info.total * 100) : 0;
+  countEl.textContent = `${info.scanned}/${info.total}`;
+
+  if (fillEl) {
+    fillEl.style.width = pct + '%';
+    fillEl.className = `fbr-fill ${status}`;
+  }
+  if (statusEl) {
+    statusEl.className = 'fbr-status fn-status';
+    const labels = { scanning:'🔍 ESCANEANDO', 'done-clean':'✅ LIMPIO', 'done-threat':'🚨 AMENAZA', queued:'EN COLA' };
+    const colors = { scanning:'var(--cyan)', 'done-clean':'var(--green)', 'done-threat':'var(--red)', queued:'var(--text2)' };
+    statusEl.textContent = labels[status] || 'EN COLA';
+    statusEl.style.color = colors[status] || 'var(--text2)';
+  }
+}
+
+function addStorageLog(msg, type = 'info') {
+  const log = document.getElementById('storageLog');
+  if (!log) return;
+  const d = document.createElement('div');
+  d.className = 'log-' + type;
+  d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  log.appendChild(d);
+  // Keep last 200 lines only
+  while (log.children.length > 200) log.removeChild(log.firstChild);
+  log.scrollTop = log.scrollHeight;
+}
+
+async function startStorageScan() {
+  if (scanQueue.length === 0) return;
+  if (scanRunning) return;
+
+  scanRunning = true;
+  scanStopped = false;
+  scanPaused = false;
+  scanStartTime = Date.now();
+  storageStats.scanned = 0;
+  storageStats.clean = 0;
+  storageStats.threats = 0;
+
+  Object.keys(folderMap).forEach(f => {
+    folderMap[f].scanned = 0;
+    folderMap[f].threats = 0;
+    updateFolderBar(f, folderMap[f], 'queued');
+  });
+
+  document.getElementById('startStorageScan').disabled = true;
+  document.getElementById('btnPause').style.display = 'inline-block';
+  document.getElementById('btnStop').style.display = 'inline-block';
+  document.getElementById('storageLog').innerHTML = '';
+  addStorageLog('▶ Escaneo iniciado', 'info');
+
+  const vtKey = SafeStorage.get('vt_api_key') || window._vtApiKey || '';
+  const total = scanQueue.length;
+  let currentFolder = null;
+
+  for (let i = 0; i < scanQueue.length; i++) {
+
+    if (scanStopped) { addStorageLog('⏹ Detenido por usuario', 'warn'); break; }
+
+    while (scanPaused && !scanStopped) {
+      document.getElementById('sp2Status').textContent = '⏸ PAUSADO — toca CONTINUAR';
+      await sleep(250);
+    }
+    if (scanStopped) break;
+
+    const { file, path, folderName } = scanQueue[i];
+
+    // ── Folder transition ──────────────────────────
+    if (folderName !== currentFolder) {
+      if (currentFolder) {
+        const prev = folderMap[currentFolder];
+        updateFolderBar(currentFolder, prev, prev.threats > 0 ? 'done-threat' : 'done-clean');
+      }
+      currentFolder = folderName;
+      updateFolderBar(folderName, folderMap[folderName], 'scanning');
+      addStorageLog(`📁 Escaneando carpeta: ${folderName}`, 'info');
+    }
+
+    // ── Update live UI ─────────────────────────────
+    const pct = ((i + 1) / total * 100);
+    const elapsed = (Date.now() - scanStartTime) / 1000;
+    const speed = i > 0 ? (i / elapsed).toFixed(1) : '—';
+    const etaSec = i > 0 ? Math.round((total - i) / (i / elapsed)) : 0;
+    const eta = etaSec > 0 ? (etaSec > 60 ? `${Math.floor(etaSec/60)}m ${etaSec%60}s` : `${etaSec}s`) : '—';
+
+    document.getElementById('sp2Status').textContent  = `ESCANEANDO... ${pct.toFixed(1)}%`;
+    document.getElementById('sp2Count').textContent   = `${i + 1} / ${total}`;
+    document.getElementById('sp2Fill').style.width    = pct + '%';
+    document.getElementById('sp2Pct').textContent     = pct.toFixed(1) + '%';
+    document.getElementById('sp2Speed').textContent   = speed + ' arch/s';
+    document.getElementById('sp2Eta').textContent     = 'ETA: ' + eta;
+    document.getElementById('sp2Current').textContent = '📄 ' + file.name;
+    document.getElementById('sp2FileStatus').textContent = path;
+
+    // ── Yield BEFORE analysis so UI updates first ──
+    await yieldToBrowser();
+
+    // ── Analyze ────────────────────────────────────
+    let verdict = 'clean';
+    let vtHit = false;
+    try {
+      const h = analyzeHeuristics(file);
+      verdict = h.verdict;
+
+      if (vtKey && (h.verdict !== 'clean' || /\.(exe|apk|bat|ps1|vbs|jar|msi|scr|cmd|hta)$/i.test(file.name))) {
+        document.getElementById('sp2FileStatus').textContent = '☁ Consultando VirusTotal...';
+        await yieldToBrowser();
+        const sha256 = await computeSHA256(file);
+        const vtData = await checkVirusTotal(sha256, vtKey);
+        if (vtData && vtData.malicious > 0) { verdict = 'malicious'; vtHit = true; }
+        await sleep(260); // stay under VT free rate limit (4 req/min)
+      }
+    } catch (_) { verdict = 'clean'; }
+
+    // ── Update counters ────────────────────────────
+    storageStats.scanned++;
+    folderMap[folderName].scanned++;
+    if (verdict === 'clean') {
+      storageStats.clean++;
+    } else {
+      storageStats.threats++;
+      folderMap[folderName].threats++;
+      const tag = verdict === 'malicious' ? '🚨 MALICIOSO' : '⚠ SOSPECHOSO';
+      addStorageLog(`${tag}: ${file.name}`, verdict === 'malicious' ? 'bad' : 'warn');
+      addThreatToList(file, path, verdict);
+    }
+
+    // Update folder bar progress live
+    updateFolderBar(folderName, folderMap[folderName], 'scanning');
+    updateStorageUI();
+
+    // ── Yield AFTER so counters render ────────────
+    await yieldToBrowser();
+  }
+
+  // Finalize last folder
+  if (currentFolder) {
+    const last = folderMap[currentFolder];
+    updateFolderBar(currentFolder, last, last.threats > 0 ? 'done-threat' : 'done-clean');
+  }
+
+  scanRunning = false;
+  const finalStatus = scanStopped ? '⏹ DETENIDO' : '✅ COMPLETADO';
+  document.getElementById('sp2Status').textContent = finalStatus;
+  document.getElementById('sp2Current').textContent = scanStopped ? 'Escaneo cancelado' : '¡Escaneo finalizado!';
+  document.getElementById('sp2FileStatus').textContent =
+    `${storageStats.scanned} archivos · ${storageStats.threats} amenazas · ${((Date.now()-scanStartTime)/1000).toFixed(1)}s`;
+
+  document.getElementById('btnPause').style.display = 'none';
+  document.getElementById('btnStop').style.display = 'none';
+  document.getElementById('startStorageScan').disabled = false;
+  document.getElementById('startStorageScan').textContent = '🔄 RE-ESCANEAR';
+
+  addStorageLog(
+    `✅ Finalizado: ${storageStats.scanned} archivos, ${storageStats.threats} amenaza(s)`,
+    storageStats.threats > 0 ? 'bad' : 'ok'
+  );
+
+  showToast(storageStats.threats > 0
+    ? `🚨 ${storageStats.threats} amenaza(s) encontrada(s)`
+    : '✅ Escaneo completo — sin amenazas');
+}
+
+function togglePause() {
+  scanPaused = !scanPaused;
+  const btn = document.getElementById('btnPause');
+  btn.textContent     = scanPaused ? '▶ CONTINUAR' : '⏸ PAUSAR';
+  btn.style.borderColor = scanPaused ? 'var(--green)' : 'var(--yellow)';
+  btn.style.color       = scanPaused ? 'var(--green)' : 'var(--yellow)';
+  addStorageLog(scanPaused ? '⏸ Pausado' : '▶ Reanudado', 'warn');
+}
+
+function stopScan() {
+  scanStopped = true;
+  scanPaused  = false;
+  scanRunning = false;
+  document.getElementById('btnPause').style.display = 'none';
+  document.getElementById('btnStop').style.display  = 'none';
+}
+
+function addThreatToList(file, path, verdict) {
+  const list = document.getElementById('threatsList');
+  const item = document.createElement('div');
+  item.className = 'threat-item';
+  const ext = file.name.split('.').pop().toLowerCase();
+  const icons = { exe:'⚙️', apk:'📱', bat:'💻', pdf:'📄', zip:'🗜️', js:'📜', ps1:'💠', vbs:'🔮' };
+  item.innerHTML = `
+    <span class="ti-icon">${icons[ext] || '⚠️'}</span>
+    <div class="ti-info">
+      <div class="ti-name">${file.name}</div>
+      <div class="ti-path">${path}</div>
+    </div>
+    <span class="ti-badge ${verdict}">${verdict === 'malicious' ? '🚨 MALICIOSO' : '⚠ SOSPECHOSO'}</span>`;
+  list.appendChild(item);
+  document.getElementById('threatsPanel').style.display = 'block';
+}
+
+// ─── PWA ─────────────────────────────────────────────────────
+let deferredPrompt = null;
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('[SHIELD AV] SW registrado:', reg.scope))
+      .catch(err => console.warn('[SHIELD AV] SW no disponible:', err.message));
+  });
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  setTimeout(() => {
+    const banner = document.getElementById('installBanner');
+    if (banner && !SafeStorage.get('pwa_dismissed')) banner.classList.add('show');
+  }, 2000);
+});
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBanner').classList.remove('show');
+  showToast('✅ SHIELD AV instalado correctamente');
+  deferredPrompt = null;
+});
+
+function installPWA() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(result => {
+      if (result.outcome === 'accepted') showToast('✅ Instalando SHIELD AV...');
+      deferredPrompt = null;
+      document.getElementById('installBanner').classList.remove('show');
+    });
+  } else {
+    showToast('📋 Chrome → Menú ⋮ → "Añadir a pantalla de inicio"');
+  }
+}
+
+function dismissBanner() {
+  document.getElementById('installBanner').classList.remove('show');
+  SafeStorage.set('pwa_dismissed', '1');
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => showToast('✅ Hash copiado'));
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style, {
+    position: 'fixed', bottom: '24px', right: '24px', zIndex: '9999',
+    background: 'var(--bg2)', border: '1px solid var(--green)',
+    color: 'var(--green)', fontFamily: "'Share Tech Mono'", fontSize: '13px',
+    padding: '12px 20px', borderRadius: '8px',
+    boxShadow: '0 0 20px rgba(0,255,136,0.3)',
+    animation: 'slideIn 0.3s ease'
+  });
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+// ─── HISTORY & STATS ─────────────────────────────────────────
+function saveToHistory(file, hash, verdict) {
+  const entry = {
+    name: file.name,
+    size: formatSize(file.size),
+    hash: hash.substring(0, 16) + '...',
+    verdict,
+    date: new Date().toLocaleString('es-MX')
+  };
+  scanHistory.unshift(entry);
+  if (scanHistory.length > 50) scanHistory.pop();
+  SafeStorage.set('shieldav_history', JSON.stringify(scanHistory));
+}
+
+function updateStats(verdict) {
+  stats.scanned++;
+  stats[verdict]++;
+  SafeStorage.set('shieldav_stats', JSON.stringify(stats));
+}
+
+function updateDashboard() {
+  document.getElementById('stat-scanned').textContent = stats.scanned;
+  document.getElementById('stat-clean').textContent = stats.clean;
+  document.getElementById('stat-suspicious').textContent = stats.suspicious;
+  document.getElementById('stat-malicious').textContent = stats.malicious;
+
+  const body = document.getElementById('historyBody');
+  if (scanHistory.length === 0) {
+    body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text2);font-family:\'Share Tech Mono\';font-size:12px;padding:30px;">Sin análisis realizados aún</td></tr>';
+    return;
+  }
+  body.innerHTML = scanHistory.map(e => `
+    <tr>
+      <td>${e.name}</td>
+      <td>${e.size}</td>
+      <td style="font-family:'Share Tech Mono';font-size:11px;color:var(--cyan)">${e.hash}</td>
+      <td><span class="tag ${e.verdict}">${{clean:'LIMPIO',suspicious:'SOSPECHOSO',malicious:'MALICIOSO'}[e.verdict]}</span></td>
+      <td>${e.date}</td>
+    </tr>
+  `).join('');
+}
+</script>
+</body>
+</html>

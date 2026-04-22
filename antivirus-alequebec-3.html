@@ -637,7 +637,26 @@ function showResults(results) {
         <div class="info-grid">
           <div class="info-item"><div class="info-label">TAMAÑO</div><div class="info-val">${fmtSize(r.file.size)}</div></div>
           <div class="info-item"><div class="info-label">TIPO</div><div class="info-val">.${ext}</div></div>
-          <div class="info-item" style="grid-column:1/-1"><div class="info-label">SHA-256</div><div class="info-val">${r.hash.substring(0,32)}...</div></div>
+          <div class="info-item" style="grid-column:1/-1">
+            <div class="info-label">SHA-256</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="info-val" style="flex:1;">${r.hash.substring(0,32)}...</div>
+              <button onclick="
+                navigator.clipboard ? navigator.clipboard.writeText('${r.hash}').then(()=>toast('✅ Hash copiado')) : toast('⚠ No se pudo copiar');
+              " style="
+                background:rgba(200,140,10,0.15);border:1px solid var(--gold);
+                color:var(--gold2);padding:5px 10px;border-radius:6px;
+                font-size:10px;cursor:pointer;white-space:nowrap;flex-shrink:0;">
+                📋 Copiar
+              </button>
+              <a href="https://www.virustotal.com/gui/search/${r.hash}" target="_blank" style="
+                background:rgba(255,102,0,0.15);border:1px solid #ff6600;
+                color:#ff9944;padding:5px 10px;border-radius:6px;
+                font-size:10px;text-decoration:none;white-space:nowrap;flex-shrink:0;">
+                🛡️ VT
+              </a>
+            </div>
+          </div>
         </div>`;
 
     // VT results with clickable malware names

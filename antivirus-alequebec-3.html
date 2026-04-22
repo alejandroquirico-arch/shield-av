@@ -251,6 +251,25 @@ body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif;min-hei
       <input class="api-input" id="apiInput" type="password" placeholder="Pega tu API Key aquí">
       <button class="btn-activar" id="btnActivar" onclick="activarApiKey()">ACTIVAR</button>
     </div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button onclick="
+        document.getElementById('apiInput').type = document.getElementById('apiInput').type==='password'?'text':'password';
+        this.textContent = document.getElementById('apiInput').type==='password'?'👁 Ver clave':'🙈 Ocultar';
+      " style="flex:1;background:transparent;border:1px solid var(--border);color:var(--text2);padding:8px;border-radius:6px;font-size:11px;cursor:pointer;">
+        👁 Ver clave
+      </button>
+      <button onclick="
+        if(confirm('¿Borrar la API Key guardada?')){
+          S.del('vt_api_key'); window._vtKey='';
+          document.getElementById('apiInput').value='';
+          updateVtStatus(false);
+          showConn(false,'🗑️ API Key eliminada');
+          toast('API Key eliminada');
+        }
+      " style="flex:1;background:transparent;border:1px solid var(--red);color:var(--red2);padding:8px;border-radius:6px;font-size:11px;cursor:pointer;">
+        🗑️ Borrar clave
+      </button>
+    </div>
     <div id="connBanner"></div>
   </div>
 
@@ -268,14 +287,32 @@ body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif;min-hei
 <div id="toast"></div>
 
 <script>
-// ── Storage seguro ──────────────────────────────────────────
+// ── Storage seguro con múltiples capas de persistencia ──────
 const S = (() => {
   const m = {};
-  let ok = false;
-  try { localStorage.setItem('_','1'); localStorage.removeItem('_'); ok = true; } catch(e){}
+  let lsOk = false;
+  let ssOk = false;
+  try { localStorage.setItem('_t','1'); localStorage.removeItem('_t'); lsOk = true; } catch(e){}
+  try { sessionStorage.setItem('_t','1'); sessionStorage.removeItem('_t'); ssOk = true; } catch(e){}
+
   return {
-    get: (k, d='') => { try { return ok ? (localStorage.getItem(k) ?? d) : (m[k] ?? d); } catch(e){ return m[k] ?? d; }},
-    set: (k, v)    => { try { ok ? localStorage.setItem(k, v) : (m[k]=v); } catch(e){ m[k]=v; }}
+    get: (k, d='') => {
+      try {
+        if (lsOk) { const v = localStorage.getItem(k); if (v !== null) return v; }
+        if (ssOk) { const v = sessionStorage.getItem(k); if (v !== null) return v; }
+        return m[k] ?? d;
+      } catch(e) { return m[k] ?? d; }
+    },
+    set: (k, v) => {
+      m[k] = v; // siempre en memoria
+      try { if (lsOk) localStorage.setItem(k, v); } catch(e){}
+      try { if (ssOk) sessionStorage.setItem(k, v); } catch(e){}
+    },
+    del: (k) => {
+      delete m[k];
+      try { if (lsOk) localStorage.removeItem(k); } catch(e){}
+      try { if (ssOk) sessionStorage.removeItem(k); } catch(e){}
+    }
   };
 })();
 
@@ -565,7 +602,55 @@ async function startScan() {
   progEl.style.display = 'none';
   if (fileIndicator) fileIndicator.remove();
   if (progLabel) progLabel.remove();
+
+  // ── Notificación al terminar ─────────────────────────────
+  const malCount  = allResults.filter(r=>r.verdict==='malicious').length;
+  const suspCount = allResults.filter(r=>r.verdict==='suspicious').length;
+  const notifTitle = malCount > 0 ? '🚨 ¡VIRUS DETECTADO!' :
+                     suspCount > 0 ? '⚠️ Archivo sospechoso' :
+                     '✅ Análisis completado';
+  const notifBody  = malCount > 0 ? malCount+' amenaza(s) detectada(s) en '+total+' archivo(s)' :
+                     suspCount > 0 ? suspCount+' archivo(s) sospechoso(s) de '+total :
+                     total+' archivo(s) analizados — Todo limpio';
+
+  // Toast prominente
+  showScanToast(notifTitle, notifBody, malCount>0?'var(--red2)':suspCount>0?'var(--yellow)':'var(--green)');
+
+  // Notificación del sistema si hay permisos
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(notifTitle, { body: notifBody, icon: 'icon-192.png', badge: 'icon-192.png' });
+  } else if ('Notification' in window && Notification.permission !== 'denied') {
+    Notification.requestPermission().then(p => {
+      if (p === 'granted') new Notification(notifTitle, { body: notifBody, icon: 'icon-192.png' });
+    });
+  }
+
   showResults(allResults);
+}
+
+function showScanToast(title, body, color) {
+  const old = document.getElementById('scanToast');
+  if (old) old.remove();
+  const el = document.createElement('div');
+  el.id = 'scanToast';
+  el.style.cssText = `
+    position:fixed;bottom:20px;left:12px;right:12px;z-index:9999;
+    background:#111;border:2px solid ${color};border-radius:12px;
+    padding:14px 16px;display:flex;gap:12px;align-items:center;
+    box-shadow:0 4px 20px rgba(0,0,0,0.6);
+    animation:slideUp 0.3s ease;
+  `;
+  el.innerHTML = `
+    <div style="font-size:28px;">${title.charAt(0)}</div>
+    <div style="flex:1;">
+      <div style="font-size:13px;font-weight:bold;color:${color};">${title}</div>
+      <div style="font-size:11px;color:#aaa;margin-top:2px;">${body}</div>
+    </div>
+    <button onclick="this.parentElement.remove()" style="
+      background:transparent;border:none;color:#666;font-size:18px;cursor:pointer;padding:4px;">✕</button>
+  `;
+  document.body.appendChild(el);
+  setTimeout(() => { if (el.parentElement) el.remove(); }, 8000);
 }
 
 
@@ -1085,11 +1170,31 @@ function toggleHistDetail(el, i) {
   if (detail) detail.style.display = detail.style.display === 'none' ? 'block' : 'none';
 }
 
+// ── Agregar animación slideUp al CSS ────────────────────────
+const styleEl = document.createElement('style');
+styleEl.textContent = '@keyframes slideUp{from{transform:translateY(100px);opacity:0}to{transform:translateY(0);opacity:1}}';
+document.head.appendChild(styleEl);
+
 // ── Init ────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
   if (window._vtKey) updateVtStatus(true);
   updateStats();
   document.getElementById('apiInput').value = window._vtKey;
+
+  // Pedir permisos de notificación
+  if ('Notification' in window && Notification.permission === 'default') {
+    setTimeout(() => {
+      Notification.requestPermission();
+    }, 3000);
+  }
+
+  // Mostrar banner si API Key está guardada
+  if (window._vtKey) {
+    const bar = document.getElementById('vtStatusBar');
+    if (bar) {
+      bar.style.animation = 'pulse 0.5s ease';
+    }
+  }
 
   // ── Share Target: mostrar zona de carga cuando se abre desde compartir ──
   const params = new URLSearchParams(window.location.search);

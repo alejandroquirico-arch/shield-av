@@ -696,13 +696,22 @@ function showResults(results) {
       html += `<div style="margin-top:10px;background:var(--bg3);border-radius:8px;padding:12px;">
         <div style="font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:6px;">☁ VIRUSTOTAL</div>
         <div style="font-size:12px;color:var(--text2);">⚠️ Archivo no encontrado en la base de datos de VirusTotal — es posible que sea muy nuevo o no haya sido analizado antes.</div>
-        <a href="https://www.virustotal.com/gui/home/upload" target="_blank" style="
-          display:inline-flex;align-items:center;gap:6px;margin-top:8px;
-          background:rgba(255,102,0,0.15);border:1px solid #ff6600;
-          color:#ff9944;padding:8px 14px;border-radius:8px;
-          font-size:11px;text-decoration:none;">
-          🛡️ Subir manualmente a VirusTotal
-        </a>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+          <a href="https://www.virustotal.com/gui/home/upload" target="_blank" style="
+            display:flex;align-items:center;justify-content:center;gap:6px;
+            background:rgba(255,102,0,0.15);border:1px solid #ff6600;
+            color:#ff9944;padding:10px;border-radius:8px;
+            font-size:12px;text-decoration:none;font-weight:bold;">
+            🛡️ Subir archivo a VirusTotal para análisis completo
+          </a>
+          <a href="https://www.virustotal.com/gui/home/search" target="_blank" style="
+            display:flex;align-items:center;justify-content:center;gap:6px;
+            background:rgba(200,140,10,0.1);border:1px solid var(--gold);
+            color:var(--gold2);padding:8px;border-radius:8px;
+            font-size:11px;text-decoration:none;">
+            🔍 Buscar hash en VirusTotal
+          </a>
+        </div>
       </div>`;
     }
 
@@ -812,6 +821,16 @@ function showResults(results) {
           <div class="threat-step"><div class="step-num">3</div><span>Mantén presionado <strong>${r.file.name}</strong> → toca 🗑️ Eliminar</span></div>
           <div class="threat-step"><div class="step-num">4</div><span>Vacía la <strong>Papelera</strong> si tu explorador la tiene</span></div>
           <button class="btn-copy" onclick="copyInfo('${r.file.name}','${folder}','${r.hash}')">📋 COPIAR INFORMACIÓN DEL ARCHIVO</button>
+          <a href="https://www.virustotal.com/gui/home/upload" target="_blank" style="
+            display:flex;align-items:center;justify-content:center;gap:8px;
+            margin-top:8px;padding:12px;border-radius:8px;text-decoration:none;
+            background:rgba(255,102,0,0.15);border:1px solid #ff6600;color:#ff9944;
+            font-size:12px;font-weight:bold;">
+            🛡️ SUBIR A VIRUSTOTAL Y ANALIZAR ONLINE
+          </a>
+          <div style="font-size:10px;color:var(--text2);text-align:center;margin-top:6px;">
+            → Sube el archivo directamente en virustotal.com para análisis completo con +70 motores
+          </div>
         </div>`;
     }
 
@@ -908,27 +927,49 @@ window.addEventListener('DOMContentLoaded', () => {
   updateStats();
   document.getElementById('apiInput').value = window._vtKey;
 
-  // ── Share Target: recibir archivo compartido ──────────────
+  // ── Share Target: mostrar zona de carga cuando se abre desde compartir ──
+  const params = new URLSearchParams(window.location.search);
+  const sharedTitle = params.get('title') || params.get('text') || '';
+
+  if (sharedTitle || document.referrer.includes('share')) {
+    // Mostrar banner de "archivo recibido"
+    const banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:60px;left:0;right:0;z-index:500;padding:12px;';
+    banner.innerHTML = `<div style="
+      background:linear-gradient(135deg,#1a2200,#2a3500);
+      border:1px solid var(--green);border-radius:10px;padding:14px;
+      display:flex;flex-direction:column;gap:10px;">
+      <div style="font-size:13px;color:var(--green);font-weight:bold;">
+        📥 Archivo listo para analizar
+      </div>
+      <div style="font-size:11px;color:var(--text2);">
+        ${sharedTitle || 'Archivo compartido'}<br>
+        Toca el botón de abajo para seleccionarlo y analizarlo:
+      </div>
+      <label style="
+        display:flex;align-items:center;justify-content:center;gap:8px;
+        background:var(--green);color:#000;padding:12px;border-radius:8px;
+        font-weight:bold;font-size:13px;cursor:pointer;">
+        📂 SELECCIONAR Y ANALIZAR
+        <input type="file" multiple accept="*/*" style="position:absolute;opacity:0;width:0;height:0;"
+          onchange="onFilesSelected(this.files,'compartido'); this.closest('div[style*=fixed]').remove();">
+      </label>
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="
+        background:transparent;border:none;color:var(--text2);font-size:11px;cursor:pointer;">
+        ✕ Cerrar
+      </button>
+    </div>`;
+    document.body.appendChild(banner);
+  }
+
+  // Escuchar mensaje del SW por si llega el archivo
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', e => {
       if (e.data && e.data.type === 'SHARE_FILE' && e.data.file) {
-        const file = e.data.file;
-        onFilesSelected([file], 'compartido');
-        // Cambiar a tab scanner
-        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById('panel-scanner').classList.add('active');
-        document.querySelector('.tab').classList.add('active');
-        toast('📥 Archivo recibido: ' + file.name + ' — toca ANALIZAR');
+        onFilesSelected([e.data.file], 'compartido');
+        toast('📥 Archivo recibido — toca ANALIZAR');
       }
     });
-  }
-
-  // ── Leer parámetros URL (cuando se abre desde Share) ──────
-  const params = new URLSearchParams(window.location.search);
-  const sharedTitle = params.get('title');
-  if (sharedTitle) {
-    toast('📥 Abre tu app y selecciona el archivo: ' + sharedTitle);
   }
 });
 </script>

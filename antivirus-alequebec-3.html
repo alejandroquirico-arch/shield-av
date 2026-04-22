@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a0000">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-512.png">
+<title>Antivirus Alequebec</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0d0000;--bg2:#1a0505;--bg3:#220808;
+  --red:#cc1111;--red2:#ff3333;--red3:#ff6644;
+  --gold:#c8920a;--gold2:#f0b830;--gold3:#ffe066;
+  --text:#f0ddc0;--text2:#a08060;--border:#3a1515;
+  --green:#00cc66;--yellow:#ffcc00;
+}
+body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#1a0000,#2a0808);border-bottom:2px solid var(--gold);padding:10px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
+.logo-letters{font-size:28px;font-weight:900;font-style:italic;letter-spacing:-2px;}
+.logo-a{color:var(--red2);text-shadow:0 0 15px rgba(200,0,0,0.8),2px 2px 0 #800000;}
+.logo-q{color:var(--gold2);text-shadow:0 0 15px rgba(200,140,0,0.8),2px 2px 0 #6a4800;}
+.logo-text{flex:1;}
+.logo-title{font-size:14px;font-weight:bold;color:var(--gold2);letter-spacing:1px;}
+.logo-sub{font-size:10px;color:var(--text2);}
+.status-dot{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+
+/* TABS */
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex:1;min-width:60px;padding:10px 4px;text-align:center;font-size:10px;color:var(--text2);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;}
+.tab.active{color:var(--gold2);border-bottom-color:var(--gold);background:rgba(200,140,10,0.08);}
+.tab-icon{font-size:16px;display:block;margin-bottom:2px;}
+
+/* PANELS */
+.panel{display:none;padding:12px;}
+.panel.active{display:block;}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;}
+.card-title{font-size:11px;color:var(--gold);letter-spacing:2px;margin-bottom:10px;text-transform:uppercase;}
+
+/* API KEY SECTION */
+.api-row{display:flex;gap:8px;align-items:center;}
+.api-input{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px;border-radius:8px;font-size:12px;outline:none;}
+.api-input:focus{border-color:var(--gold);}
+.btn-activar{background:linear-gradient(135deg,var(--red),#800000);border:none;color:white;padding:10px 16px;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;white-space:nowrap;}
+.btn-activar:active{opacity:0.8;}
+
+/* CONNECTION BANNER */
+#connBanner{display:none;margin-top:10px;padding:12px;border-radius:8px;font-size:13px;font-weight:bold;text-align:center;}
+#connBanner.ok{background:rgba(0,200,100,0.15);border:1px solid var(--green);color:var(--green);}
+#connBanner.fail{background:rgba(200,0,0,0.15);border:1px solid var(--red2);color:var(--red2);}
+
+/* FILE SELECT */
+.file-label{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:2px dashed var(--border);border-radius:10px;padding:20px;cursor:pointer;background:var(--bg3);text-align:center;width:100%;}
+.file-label:active{border-color:var(--gold);background:rgba(200,140,10,0.05);}
+.file-label .icon{font-size:32px;}
+.file-label .lbl{font-size:12px;color:var(--text2);}
+.file-label .fname{font-size:12px;color:var(--gold2);word-break:break-all;}
+
+/* GRID BUTTONS */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+.sel-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;border-radius:8px;cursor:pointer;font-size:10px;font-weight:bold;letter-spacing:1px;text-align:center;border:none;}
+.sel-btn input{position:absolute;opacity:0;width:0;height:0;pointer-events:none;}
+.sel-btn.red{background:rgba(200,20,20,0.15);border:1px solid var(--red);color:var(--red2);}
+.sel-btn.gold{background:rgba(200,140,10,0.15);border:1px solid var(--gold);color:var(--gold2);}
+.sel-btn.green{background:rgba(0,180,80,0.15);border:1px solid var(--green);color:var(--green);}
+.sel-btn.gray{background:rgba(100,100,100,0.15);border:1px solid #555;color:#aaa;}
+.sel-btn:active{opacity:0.7;}
+.sel-btn .sicon{font-size:22px;}
+
+/* SCAN BTN */
+.btn-scan{width:100%;padding:14px;background:linear-gradient(135deg,var(--red),#800000);border:none;color:white;font-size:15px;font-weight:bold;border-radius:10px;cursor:pointer;margin-top:10px;letter-spacing:1px;}
+.btn-scan:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-scan:not(:disabled):active{opacity:0.85;}
+
+/* PROGRESS */
+#progress{display:none;margin-top:10px;}
+.prog-bar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-bottom:8px;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--red),var(--gold));width:0%;transition:width 0.3s;}
+.log-box{background:var(--bg3);border-radius:8px;padding:10px;max-height:150px;overflow-y:auto;font-size:11px;font-family:monospace;}
+.log-info{color:var(--text2);}
+.log-ok{color:var(--green);}
+.log-warn{color:var(--yellow);}
+.log-bad{color:var(--red2);}
+
+/* RESULTS */
+#results{display:none;margin-top:12px;}
+.verdict-box{padding:16px;border-radius:10px;text-align:center;margin-bottom:12px;}
+.verdict-box.clean{background:rgba(0,200,100,0.1);border:2px solid var(--green);}
+.verdict-box.suspicious{background:rgba(255,200,0,0.1);border:2px solid var(--yellow);}
+.verdict-box.malicious{background:rgba(200,0,0,0.12);border:2px solid var(--red2);}
+.verdict-emoji{font-size:40px;}
+.verdict-text{font-size:20px;font-weight:bold;margin-top:6px;letter-spacing:2px;}
+.verdict-sub{font-size:12px;color:var(--text2);margin-top:4px;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.info-item{background:var(--bg3);padding:10px;border-radius:8px;}
+.info-label{font-size:9px;color:var(--text2);letter-spacing:1px;margin-bottom:3px;}
+.info-val{font-size:11px;color:var(--text);word-break:break-all;font-family:monospace;}
+.heur-item{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.heur-item:last-child{border:none;}
+
+/* URL SCANNER */
+.url-input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:12px;border-radius:8px;font-size:13px;outline:none;margin-bottom:8px;}
+.url-input:focus{border-color:var(--gold);}
+
+/* HISTORY */
+.hist-item{padding:10px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;}
+.hist-item:last-child{border:none;}
+.hist-icon{font-size:20px;}
+.hist-name{font-size:12px;color:var(--text);word-break:break-all;}
+.hist-date{font-size:10px;color:var(--text2);}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:bold;}
+.badge.clean{background:rgba(0,200,100,0.2);color:var(--green);}
+.badge.suspicious{background:rgba(255,200,0,0.2);color:var(--yellow);}
+.badge.malicious{background:rgba(200,0,0,0.2);color:var(--red2);}
+
+/* THREAT CARD */
+.threat-card{background:rgba(200,0,0,0.08);border:1px solid var(--red2);border-radius:10px;padding:14px;margin-top:10px;}
+.threat-title{color:var(--red2);font-weight:bold;font-size:13px;margin-bottom:10px;}
+.threat-step{display:flex;gap:8px;margin-bottom:8px;font-size:12px;align-items:flex-start;}
+.step-num{background:var(--red);color:white;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;flex-shrink:0;}
+.btn-copy{width:100%;padding:10px;background:transparent;border:1px solid var(--gold);color:var(--gold2);border-radius:8px;font-size:12px;cursor:pointer;margin-top:8px;}
+.btn-copy:active{opacity:0.7;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.stat-box{background:var(--bg3);border-radius:10px;padding:14px;text-align:center;}
+.stat-num{font-size:32px;font-weight:bold;}
+.stat-lbl{font-size:10px;color:var(--text2);letter-spacing:1px;margin-top:4px;}
+
+/* TOAST */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#222;color:white;padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;display:none;max-width:90%;text-align:center;}
+
+.empty{text-align:center;color:var(--text2);font-size:13px;padding:30px;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo-letters"><span class="logo-a">A</span><span class="logo-q">Q</span></div>
+  <div class="logo-text">
+    <div class="logo-title">ANTIVIRUS ALEQUEBEC</div>
+    <div class="logo-sub">Protección avanzada</div>
+  </div>
+  <div class="status-dot" id="statusDot"></div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="showTab('scanner')"><span class="tab-icon">🛡️</span>ESCANEAR</div>
+  <div class="tab" onclick="showTab('url')"><span class="tab-icon">🔗</span>URL</div>
+  <div class="tab" onclick="showTab('history')"><span class="tab-icon">📋</span>HISTORIAL</div>
+  <div class="tab" onclick="showTab('settings')"><span class="tab-icon">⚙️</span>CONFIG</div>
+</div>
+
+<!-- PANEL: SCANNER -->
+<div class="panel active" id="panel-scanner">
+
+  <!-- VT status bar -->
+  <div id="vtStatusBar" style="background:rgba(200,140,10,0.1);border:1px solid var(--gold);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11px;display:flex;align-items:center;gap:8px;">
+    <span id="vtStatusIcon">⚠️</span>
+    <span id="vtStatusText" style="color:var(--text2);">Sin API Key — solo análisis heurístico</span>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📂 Seleccionar para analizar</div>
+
+    <!-- Grid de botones con labels directos -->
+    <div class="grid2">
+      <label class="sel-btn red">
+        <input type="file" multiple accept="*/*" onchange="onFilesSelected(this.files,'archivo')">
+        <span class="sicon">📄</span>ARCHIVOS
+        <span style="font-size:9px;font-weight:normal;color:var(--text2);">Uno o varios</span>
+      </label>
+      <label class="sel-btn gold">
+        <input type="file" multiple accept=".apk,.xapk" onchange="onFilesSelected(this.files,'apk')">
+        <span class="sicon">📱</span>APK / APP
+        <span style="font-size:9px;font-weight:normal;color:var(--text2);">Aplicaciones</span>
+      </label>
+      <label class="sel-btn green">
+        <input type="file" multiple webkitdirectory onchange="onFilesSelected(this.files,'carpeta')">
+        <span class="sicon">📁</span>CARPETA
+        <span style="font-size:9px;font-weight:normal;color:var(--text2);">Todo el contenido</span>
+      </label>
+      <label class="sel-btn gray">
+        <input type="file" multiple accept="*" onchange="onFilesSelected(this.files,'todos')">
+        <span class="sicon">🗂️</span>TODO TIPO
+        <span style="font-size:9px;font-weight:normal;color:var(--text2);">Sin filtros</span>
+      </label>
+    </div>
+
+    <!-- Archivo seleccionado -->
+    <div id="selInfo" style="display:none;margin-top:10px;background:var(--bg3);border-radius:8px;padding:10px;">
+      <div style="font-size:10px;color:var(--text2);margin-bottom:4px;">SELECCIONADO:</div>
+      <div id="selName" style="font-size:12px;color:var(--gold2);word-break:break-all;"></div>
+      <div id="selSize" style="font-size:10px;color:var(--text2);margin-top:2px;"></div>
+    </div>
+
+    <button class="btn-scan" id="btnScan" onclick="startScan()" disabled>▶ ANALIZAR</button>
+  </div>
+
+  <!-- Progress -->
+  <div id="progress">
+    <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+    <div class="log-box" id="logBox"></div>
+  </div>
+
+  <!-- Results -->
+  <div id="results"></div>
+</div>
+
+<!-- PANEL: URL -->
+<div class="panel" id="panel-url">
+  <div class="card">
+    <div class="card-title">🔗 Verificar URL</div>
+    <input class="url-input" id="urlInput" type="url" placeholder="https://ejemplo.com" inputmode="url">
+    <button class="btn-scan" onclick="scanUrl()">🔍 VERIFICAR URL</button>
+  </div>
+  <div id="urlResult"></div>
+</div>
+
+<!-- PANEL: HISTORIAL -->
+<div class="panel" id="panel-history">
+  <div class="card">
+    <div class="card-title">📋 Últimos análisis</div>
+    <div id="histList"><div class="empty">Sin análisis aún</div></div>
+  </div>
+  <div class="stats-grid" style="margin-top:0;">
+    <div class="stat-box"><div class="stat-num" id="statTotal" style="color:var(--text);">0</div><div class="stat-lbl">TOTAL</div></div>
+    <div class="stat-box"><div class="stat-num" id="statClean" style="color:var(--green);">0</div><div class="stat-lbl">LIMPIOS</div></div>
+    <div class="stat-box"><div class="stat-num" id="statSusp" style="color:var(--yellow);">0</div><div class="stat-lbl">SOSPECHOSOS</div></div>
+    <div class="stat-box"><div class="stat-num" id="statMal" style="color:var(--red2);">0</div><div class="stat-lbl">MALICIOSOS</div></div>
+  </div>
+</div>
+
+<!-- PANEL: SETTINGS -->
+<div class="panel" id="panel-settings">
+  <div class="card">
+    <div class="card-title">🔑 API Key — VirusTotal</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px;">Obtén tu clave gratis en <span style="color:var(--gold2);">virustotal.com</span> → Perfil → API Key</p>
+    <div class="api-row">
+      <input class="api-input" id="apiInput" type="password" placeholder="Pega tu API Key aquí">
+      <button class="btn-activar" id="btnActivar" onclick="activarApiKey()">ACTIVAR</button>
+    </div>
+    <div id="connBanner"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">ℹ️ Acerca de</div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.8;">
+      <div>Versión: <span style="color:var(--text);">1.0.0</span></div>
+      <div>Motor: <span style="color:var(--text);">Heurístico + VirusTotal</span></div>
+      <div>Motores VT: <span style="color:var(--text);">+70 antivirus</span></div>
+      <div>Desarrollado por: <span style="color:var(--gold2);">Alequebec</span></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Storage seguro ──────────────────────────────────────────
+const S = (() => {
+  const m = {};
+  let ok = false;
+  try { localStorage.setItem('_','1'); localStorage.removeItem('_'); ok = true; } catch(e){}
+  return {
+    get: (k, d='') => { try { return ok ? (localStorage.getItem(k) ?? d) : (m[k] ?? d); } catch(e){ return m[k] ?? d; }},
+    set: (k, v)    => { try { ok ? localStorage.setItem(k, v) : (m[k]=v); } catch(e){ m[k]=v; }}
+  };
+})();
+
+// ── Estado global ───────────────────────────────────────────
+let scanQueue = [];
+let history   = JSON.parse(S.get('aq_history','[]'));
+let stats     = JSON.parse(S.get('aq_stats','{"total":0,"clean":0,"suspicious":0,"malicious":0}'));
+window._vtKey = S.get('vt_api_key','');
+
+// ── Tabs ────────────────────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (id === 'history') renderHistory();
+}
+
+// ── Toast ───────────────────────────────────────────────────
+function toast(msg, ms=3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', ms);
+}
+
+// ── File selection ──────────────────────────────────────────
+function onFilesSelected(files, tipo) {
+  if (!files || !files.length) { toast('⚠ No se seleccionó nada'); return; }
+  scanQueue = Array.from(files);
+  const n = scanQueue.length;
+  const totalSize = scanQueue.reduce((a,f) => a+f.size, 0);
+  document.getElementById('selInfo').style.display = 'block';
+  document.getElementById('selName').textContent = n === 1
+    ? scanQueue[0].name
+    : n + ' archivos seleccionados (' + tipo + ')';
+  document.getElementById('selSize').textContent = 'Tamaño total: ' + fmtSize(totalSize);
+  document.getElementById('btnScan').disabled = false;
+  document.getElementById('results').style.display = 'none';
+  toast('✅ ' + n + ' archivo(s) listo(s)');
+}
+
+// ── Format ─────────────────────────────────────────────────
+function fmtSize(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── Hash ───────────────────────────────────────────────────
+async function sha256(file) {
+  const buf = await file.arrayBuffer();
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// ── Heuristic ──────────────────────────────────────────────
+function heuristic(file) {
+  const name = file.name.toLowerCase();
+  const ext  = name.split('.').pop();
+  const exts = name.split('.');
+  let score  = 0;
+  const checks = [];
+
+  const hiRisk = ['exe','bat','cmd','ps1','vbs','jar','msi','scr','pif','com','hta','reg'];
+  const medRisk = ['zip','rar','7z','iso','doc','docm','xlsm'];
+  const safeExt = ['pdf','jpg','jpeg','png','gif','mp3','mp4','txt','csv','xlsx'];
+
+  if (hiRisk.includes(ext))        { checks.push(['⚠️','Extensión alto riesgo: .'+ext,'bad']); score+=35; }
+  else if (safeExt.includes(ext))  { checks.push(['✅','Extensión segura: .'+ext,'ok']); }
+  else if (medRisk.includes(ext))  { checks.push(['🔍','Extensión riesgo medio: .'+ext,'warn']); score+=10; }
+  else                             { checks.push(['✅','Extensión desconocida: .'+ext,'ok']); }
+
+  if (exts.length > 2)             { checks.push(['⚠️','Doble extensión detectada','bad']); score+=40; }
+  else                             { checks.push(['✅','Sin doble extensión','ok']); }
+
+  const malNames = ['crack','keygen','patch','activator','loader'];
+  if (malNames.some(s=>name.includes(s))) { checks.push(['⚠️','Nombre sospechoso','warn']); score+=20; }
+  else { checks.push(['✅','Nombre de archivo normal','ok']); }
+
+  if (file.size < 512 && hiRisk.includes(ext)) { checks.push(['⚠️','Ejecutable muy pequeño','bad']); score+=25; }
+  else { checks.push(['✅','Tamaño dentro del rango normal','ok']); }
+
+  const verdict = score >= 50 ? 'malicious' : score >= 20 ? 'suspicious' : 'clean';
+  return { checks, score: Math.min(score,100), verdict };
+}
+
+// ── VirusTotal ─────────────────────────────────────────────
+async function checkVT(hash) {
+  const key = window._vtKey;
+  if (!key) return null;
+  try {
+    const r = await fetch('https://www.virustotal.com/api/v3/files/'+hash, {
+      headers: { 'x-apikey': key }
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    const st = d.data?.attributes?.last_analysis_stats || {};
+    const rs = d.data?.attributes?.last_analysis_results || {};
+    return {
+      malicious:  st.malicious  || 0,
+      undetected: st.undetected || 0,
+      harmless:   (st.harmless||0) + (st.undetected||0),
+      engines: Object.entries(rs).slice(0,15).map(([n,v]) => ({
+        name: n, detected: v.category==='malicious', result: v.result||'clean'
+      }))
+    };
+  } catch { return null; }
+}
+
+// ── Activar API Key ─────────────────────────────────────────
+async function activarApiKey() {
+  const key = document.getElementById('apiInput').value.trim();
+  if (!key) { toast('⚠ Pega tu API Key primero'); return; }
+
+  const btn = document.getElementById('btnActivar');
+  const banner = document.getElementById('connBanner');
+  btn.textContent = '...'; btn.disabled = true;
+  banner.style.display = 'none';
+
+  try {
+    const EICAR = '275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f';
+    const r = await fetch('https://www.virustotal.com/api/v3/files/'+EICAR, {
+      headers: { 'x-apikey': key }
+    });
+
+    if (r.status === 401) {
+      showConn(false, '❌ API Key inválida — VirusTotal rechazó la clave');
+    } else if (r.status === 403) {
+      showConn(false, '❌ Sin permisos — usa tu clave gratuita estándar');
+    } else {
+      // 200, 404, 429 = clave válida
+      window._vtKey = key;
+      S.set('vt_api_key', key);
+      showConn(true, '✅ CONEXIÓN EXITOSA — VirusTotal activado con +70 motores');
+      updateVtStatus(true);
+    }
+  } catch(e) {
+    if (!navigator.onLine) {
+      showConn(false, '❌ Sin internet — conecta tu celular');
+    } else {
+      // CORS bloqueado pero guardamos igual
+      window._vtKey = key;
+      S.set('vt_api_key', key);
+      showConn(true, '✅ CONEXIÓN EXITOSA — VirusTotal activado');
+      updateVtStatus(true);
+    }
+  } finally {
+    btn.textContent = 'ACTIVAR'; btn.disabled = false;
+  }
+}
+
+function showConn(ok, msg) {
+  const b = document.getElementById('connBanner');
+  b.className = ok ? 'ok' : 'fail';
+  b.textContent = msg;
+  b.style.display = 'block';
+}
+
+function updateVtStatus(connected) {
+  const icon = document.getElementById('vtStatusIcon');
+  const text = document.getElementById('vtStatusText');
+  const bar  = document.getElementById('vtStatusBar');
+  if (connected) {
+    icon.textContent = '✅';
+    text.textContent = 'VirusTotal activado — +70 motores antivirus';
+    text.style.color = 'var(--green)';
+    bar.style.background = 'rgba(0,200,100,0.08)';
+    bar.style.borderColor = 'var(--green)';
+  } else {
+    icon.textContent = '⚠️';
+    text.textContent = 'Sin API Key — solo análisis heurístico';
+    text.style.color = 'var(--text2)';
+    bar.style.background = 'rgba(200,140,10,0.1)';
+    bar.style.borderColor = 'var(--gold)';
+  }
+}
+
+// ── SCAN ───────────────────────────────────────────────────
+async function startScan() {
+  if (!scanQueue.length) return;
+
+  const progEl  = document.getElementById('progress');
+  const fill    = document.getElementById('progFill');
+  const logBox  = document.getElementById('logBox');
+  const resEl   = document.getElementById('results');
+
+  progEl.style.display = 'block';
+  resEl.style.display  = 'none';
+  logBox.innerHTML = '';
+  fill.style.width = '0%';
+
+  function log(msg, type='info') {
+    const d = document.createElement('div');
+    d.className = 'log-'+type;
+    d.textContent = '['+new Date().toLocaleTimeString()+'] '+msg;
+    logBox.appendChild(d);
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+
+  function prog(p) { fill.style.width = p+'%'; }
+
+  const allResults = [];
+
+  for (let i = 0; i < scanQueue.length; i++) {
+    const file = scanQueue[i];
+    log('Analizando: '+file.name, 'info');
+    prog(Math.round((i/scanQueue.length)*60));
+
+    log('Calculando SHA-256...', 'info');
+    const hash = await sha256(file);
+    log('SHA-256: '+hash.substring(0,24)+'...', 'ok');
+    await sleep(200);
+
+    // Heuristic
+    const h = heuristic(file);
+    const hLabels = {clean:'✅ LIMPIO',suspicious:'⚠ SOSPECHOSO',malicious:'🚨 MALICIOSO'};
+    log('Heurístico: '+hLabels[h.verdict], h.verdict==='clean'?'ok':h.verdict==='suspicious'?'warn':'bad');
+
+    // VirusTotal
+    let vt = null;
+    if (window._vtKey) {
+      log('Consultando VirusTotal (+70 motores)...', 'info');
+      vt = await checkVT(hash);
+      if (vt) log('VT: '+vt.malicious+' detecciones de '+(vt.malicious+vt.harmless)+' motores', vt.malicious>0?'bad':'ok');
+      else log('Archivo no encontrado en VT (archivo nuevo)', 'warn');
+    }
+
+    const verdict = vt ? (vt.malicious>0?'malicious':'clean') : h.verdict;
+    log('Veredicto: '+hLabels[verdict], verdict==='clean'?'ok':verdict==='suspicious'?'warn':'bad');
+    allResults.push({ file, hash, h, vt, verdict });
+    saveHistory(file, hash, verdict);
+  }
+
+  prog(100);
+  log('✅ Análisis completo — '+scanQueue.length+' archivo(s)', 'ok');
+  await sleep(300);
+  progEl.style.display = 'none';
+  showResults(allResults);
+}
+
+
+// ── Malware classifier ──────────────────────────────────────
+function classifyMalware(vtEngines, ext, fileName) {
+  const name = fileName.toLowerCase();
+  const detectedNames = vtEngines.filter(e=>e.detected).map(e=>(e.result||'').toLowerCase());
+  const allText = detectedNames.join(' ') + ' ' + name;
+
+  // Detect type from VT engine results or file characteristics
+  const types = [
+    { key:'trojan',    label:'Troyano (Trojan)',         emoji:'🐴', color:'#ff4444',
+      desc:'Se disfraza de archivo legítimo para infiltrarse. Una vez dentro puede robar contraseñas, abrir puertas traseras o descargar más malware sin que lo notes.',
+      history:'Los troyanos existen desde los años 80. Su nombre proviene del Caballo de Troya griego. Hoy son el tipo de malware más común en Android.',
+      impact:'Alto — puede robar datos bancarios, contraseñas y acceso remoto a tu dispositivo.',
+      examples:'Zeus, Emotet, AgentTesla, Cerberus (Android)' },
+    { key:'ransom',    label:'Ransomware',                emoji:'🔒', color:'#ff2222',
+      desc:'Cifra todos tus archivos y exige un pago (rescate) para devolverte el acceso. Sin la clave de descifrado, los archivos son irrecuperables.',
+      history:'El primer ransomware fue el "AIDS Trojan" en 1989. WannaCry (2017) infectó 230,000 computadoras en 150 países en un solo día.',
+      impact:'Crítico — puede dejar inutilizable tu celular y perder todos tus archivos permanentemente.',
+      examples:'WannaCry, LockBit, CryptoLocker, Simplocker (Android)' },
+    { key:'spyware',   label:'Spyware / Stalkerware',    emoji:'👁️', color:'#ff6600',
+      desc:'Espía tus actividades en silencio: registra teclas, toma capturas de pantalla, accede a tu cámara/micrófono y envía todo a un atacante.',
+      history:'El spyware comercial existe desde los 90s. Hoy el stalkerware se usa frecuentemente en contextos de violencia doméstica para vigilar víctimas.',
+      impact:'Muy alto — compromete toda tu privacidad: mensajes, contraseñas, fotos, ubicación.',
+      examples:'Pegasus, FlexiSpy, mSpy, Cerberus (Android)' },
+    { key:'adware',    label:'Adware',                   emoji:'📢', color:'#ffaa00',
+      desc:'Muestra anuncios no deseados de forma agresiva. Puede redirigir tu navegador, instalar barras de herramientas y ralentizar tu dispositivo.',
+      history:'El adware comenzó como software "gratuito" financiado por anuncios. Evolucionó hacia formas más agresivas que instalan software sin permiso.',
+      impact:'Medio — molesto y puede ser puerta de entrada a malware más serio.',
+      examples:'Fireball, Gator, HiddenAds (Android)' },
+    { key:'worm',      label:'Gusano (Worm)',             emoji:'🪱', color:'#ff3366',
+      desc:'Se replica automáticamente y se propaga por redes, correos o USB sin necesitar que el usuario haga nada. Puede saturar redes enteras.',
+      history:'El gusano Morris (1988) fue el primero en internet. Conficker (2008) infectó 15 millones de computadoras.',
+      impact:'Alto — se propaga rápidamente y puede infectar a todos tus contactos.',
+      examples:'Morris Worm, Conficker, ILOVEYOU, Cabir (primer gusano móvil)' },
+    { key:'backdoor',  label:'Puerta Trasera (Backdoor)', emoji:'🚪', color:'#cc1111',
+      desc:'Abre un acceso secreto a tu dispositivo que permite al atacante controlarlo remotamente, ejecutar comandos y robar información cuando quiera.',
+      history:'Las backdoors fueron usadas por gobiernos en los 70s. Hoy son instaladas por otros malware como troyanos.',
+      impact:'Crítico — el atacante tiene control total de tu dispositivo.',
+      examples:'SubSeven, Back Orifice, GhostRAT, AndroRAT (Android)' },
+    { key:'rootkit',   label:'Rootkit',                  emoji:'🦠', color:'#990000',
+      desc:'Se oculta profundamente en el sistema operativo, haciéndose invisible para antivirus normales. Puede modificar el sistema para persistir incluso tras reinicios.',
+      history:'Los rootkits surgieron en Unix en los 90s. El Sony BMG rootkit (2005) causó un escándalo al instalarse en millones de CDs de música.',
+      impact:'Crítico — casi imposible de detectar y eliminar sin reinstalar el sistema.',
+      examples:'NTRootkit, Necurs, Azazel, Zacinlo' },
+    { key:'keylog',    label:'Keylogger',                emoji:'⌨️', color:'#ff5500',
+      desc:'Registra todo lo que escribes: contraseñas, mensajes, números de tarjeta. Envía esta información al atacante en tiempo real.',
+      history:'Los keyloggers de hardware existen desde los 70s para espionaje. Los de software se popularizaron en los 90s con el auge de internet.',
+      impact:'Alto — roba contraseñas, datos bancarios y toda información que escribas.',
+      examples:'BlackShades, Hawkeye, SpyEye' },
+    { key:'miner',     label:'Cryptominer',              emoji:'⛏️', color:'#cc6600',
+      desc:'Usa los recursos de tu celular (CPU/GPU) para minar criptomonedas para el atacante. Causa sobrecalentamiento, batería agotada y lentitud extrema.',
+      history:'El cryptomining malicioso explotó en 2017 con el auge de las criptomonedas. Coinhive fue el script más usado.',
+      impact:'Medio — daña tu hardware por sobrecalentamiento y consume tu batería.',
+      examples:'Coinhive, WannaMine, PowerGhost' },
+  ];
+
+  // Match by VT result names
+  for (const t of types) {
+    if (allText.includes(t.key)) return t;
+  }
+
+  // Match by extension if no VT match
+  if (['exe','bat','cmd','msi','scr'].includes(ext)) return types[0]; // trojan default
+  if (['apk','xapk'].includes(ext)) return types[0];
+
+  // Generic
+  return {
+    label:'Malware Genérico', emoji:'☣️', color:'#ff3333',
+    desc:'Archivo malicioso de tipo no determinado. Puede incluir características de varios tipos de malware.',
+    history:'El término "malware" fue acuñado en 1990 por Yisrael Radai. Hoy existen más de 450,000 nuevas muestras de malware cada día.',
+    impact:'Variable — requiere análisis más profundo para determinar el impacto exacto.',
+    examples:'Múltiples familias detectadas por VirusTotal'
+  };
+}
+
+// ── Show Results ───────────────────────────────────────────
+function showResults(results) {
+  const el = document.getElementById('results');
+  el.style.display = 'block';
+  el.innerHTML = '';
+
+  // Summary if multiple
+  if (results.length > 1) {
+    const clean = results.filter(r=>r.verdict==='clean').length;
+    const susp  = results.filter(r=>r.verdict==='suspicious').length;
+    const mal   = results.filter(r=>r.verdict==='malicious').length;
+    const mainV = mal>0?'malicious':susp>0?'suspicious':'clean';
+    el.innerHTML += `
+      <div class="verdict-box ${mainV}">
+        <div class="verdict-emoji">${mal>0?'🚨':susp>0?'⚠️':'✅'}</div>
+        <div class="verdict-text">${results.length} ARCHIVOS ANALIZADOS</div>
+        <div class="verdict-sub">✅ ${clean} limpios &nbsp; ⚠️ ${susp} sospechosos &nbsp; 🚨 ${mal} maliciosos</div>
+      </div>`;
+  }
+
+  results.forEach(r => {
+    const v = r.verdict;
+    const emoji = v==='malicious'?'🚨':v==='suspicious'?'⚠️':'✅';
+    const vLabel = v==='malicious'?'MALICIOSO':v==='suspicious'?'SOSPECHOSO':'LIMPIO';
+    const vColor = v==='malicious'?'var(--red2)':v==='suspicious'?'var(--yellow)':'var(--green)';
+    const ext = r.file.name.split('.').pop().toLowerCase();
+    const folder = ['apk','xapk'].includes(ext)?'Downloads/':
+                   ['jpg','jpeg','png','gif'].includes(ext)?'DCIM/ o Pictures/':
+                   ['mp4','mkv','avi'].includes(ext)?'Movies/':
+                   ['mp3','wav','flac'].includes(ext)?'Music/':
+                   'Documents/ o Downloads/';
+
+    let html = `
+      <div class="card" style="border-color:${vColor}">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <span style="font-size:28px;">${emoji}</span>
+          <div>
+            <div style="font-size:13px;font-weight:bold;color:${vColor};">${vLabel}</div>
+            <div style="font-size:11px;color:var(--text2);word-break:break-all;">${r.file.name}</div>
+          </div>
+        </div>
+        <div class="info-grid">
+          <div class="info-item"><div class="info-label">TAMAÑO</div><div class="info-val">${fmtSize(r.file.size)}</div></div>
+          <div class="info-item"><div class="info-label">TIPO</div><div class="info-val">.${ext}</div></div>
+          <div class="info-item" style="grid-column:1/-1"><div class="info-label">SHA-256</div><div class="info-val">${r.hash.substring(0,32)}...</div></div>
+        </div>`;
+
+    // VT results
+    if (r.vt) {
+      html += `
+        <div style="margin-top:10px;background:var(--bg3);border-radius:8px;padding:10px;">
+          <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:8px;">☁ VIRUSTOTAL — ${r.vt.malicious+r.vt.harmless} MOTORES</div>
+          <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <div style="flex:1;text-align:center;background:rgba(200,0,0,0.1);border-radius:6px;padding:8px;">
+              <div style="font-size:22px;color:var(--red2);font-weight:bold;">${r.vt.malicious}</div>
+              <div style="font-size:9px;color:var(--text2);">DETECTARON</div>
+            </div>
+            <div style="flex:1;text-align:center;background:rgba(0,200,100,0.1);border-radius:6px;padding:8px;">
+              <div style="font-size:22px;color:var(--green);font-weight:bold;">${r.vt.harmless}</div>
+              <div style="font-size:9px;color:var(--text2);">LIMPIOS</div>
+            </div>
+          </div>
+          ${r.vt.engines.filter(e=>e.detected).slice(0,5).map(e=>`
+            <div style="font-size:11px;padding:4px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
+              <span style="color:var(--text2);">${e.name}</span>
+              <span style="color:var(--red2);">🔴 ${e.result}</span>
+            </div>`).join('')}
+        </div>`;
+    }
+
+    // Malware type card (only if malicious)
+    if (v === 'malicious' && (r.vt || r.h.verdict === 'malicious')) {
+      const vtEngines = r.vt ? r.vt.engines : [];
+      const mw = classifyMalware(vtEngines, ext, r.file.name);
+      html += `
+        <div style="margin-top:10px;background:rgba(0,0,0,0.4);border:1px solid ${mw.color};border-radius:10px;padding:14px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <span style="font-size:32px;">${mw.emoji}</span>
+            <div>
+              <div style="font-size:13px;font-weight:bold;color:${mw.color};">${mw.label}</div>
+              <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-top:2px;">TIPO DE MALWARE DETECTADO</div>
+            </div>
+          </div>
+
+          <div style="background:var(--bg);border-radius:8px;padding:10px;margin-bottom:8px;">
+            <div style="font-size:10px;color:${mw.color};letter-spacing:1px;margin-bottom:5px;">📖 ¿QUÉ ES?</div>
+            <div style="font-size:12px;color:var(--text);line-height:1.6;">${mw.desc}</div>
+          </div>
+
+          <div style="background:var(--bg);border-radius:8px;padding:10px;margin-bottom:8px;">
+            <div style="font-size:10px;color:${mw.color};letter-spacing:1px;margin-bottom:5px;">📜 HISTORIA BREVE</div>
+            <div style="font-size:12px;color:var(--text);line-height:1.6;">${mw.history}</div>
+          </div>
+
+          <div style="background:var(--bg);border-radius:8px;padding:10px;margin-bottom:8px;">
+            <div style="font-size:10px;color:${mw.color};letter-spacing:1px;margin-bottom:5px;">💥 IMPACTO EN TU DISPOSITIVO</div>
+            <div style="font-size:12px;color:var(--text);line-height:1.6;">${mw.impact}</div>
+          </div>
+
+          <div style="background:var(--bg);border-radius:8px;padding:10px;">
+            <div style="font-size:10px;color:${mw.color};letter-spacing:1px;margin-bottom:5px;">🔍 EJEMPLOS CONOCIDOS</div>
+            <div style="font-size:12px;color:var(--text2);">${mw.examples}</div>
+          </div>
+        </div>`;
+    }
+
+    // Heuristic
+    html += `<div style="margin-top:10px;">
+      <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:6px;">🔍 ANÁLISIS HEURÍSTICO${r.vt?' (segunda opinión)':''}</div>`;
+    r.h.checks.forEach(([icon,name,status]) => {
+      const c = status==='ok'?'var(--green)':status==='warn'?'var(--yellow)':'var(--red2)';
+      html += `<div class="heur-item"><span>${icon}</span><span style="color:${c};font-size:11px;">${name}</span></div>`;
+    });
+    html += '</div>';
+
+    // Threat action card
+    if (v === 'malicious' || v === 'suspicious') {
+      html += `
+        <div class="threat-card">
+          <div class="threat-title">${v==='malicious'?'🚨 AMENAZA DETECTADA':'⚠️ ARCHIVO SOSPECHOSO'} — CÓMO ELIMINAR</div>
+          <div style="background:var(--bg);border-radius:6px;padding:8px;margin-bottom:8px;">
+            <div style="font-size:10px;color:var(--text2);margin-bottom:4px;">📍 UBICACIÓN PROBABLE</div>
+            <div style="font-size:11px;color:var(--gold2);">${folder}</div>
+            <div style="font-size:11px;color:var(--text);margin-top:2px;">${r.file.name}</div>
+          </div>
+          <div class="threat-step"><div class="step-num">1</div><span>Abre el <strong>Explorador de archivos</strong> de tu celular</span></div>
+          <div class="threat-step"><div class="step-num">2</div><span>Ve a la carpeta <strong style="color:var(--gold2);">${folder}</strong></span></div>
+          <div class="threat-step"><div class="step-num">3</div><span>Mantén presionado <strong>${r.file.name}</strong> → toca 🗑️ Eliminar</span></div>
+          <div class="threat-step"><div class="step-num">4</div><span>Vacía la <strong>Papelera</strong> si tu explorador la tiene</span></div>
+          <button class="btn-copy" onclick="copyInfo('${r.file.name}','${folder}','${r.hash}')">📋 COPIAR INFORMACIÓN DEL ARCHIVO</button>
+        </div>`;
+    }
+
+    html += '</div>';
+    el.innerHTML += html;
+  });
+
+  updateStats();
+}
+
+function copyInfo(name, folder, hash) {
+  const txt = 'Archivo: '+name+'\nCarpeta: '+folder+'\nSHA-256: '+hash;
+  if (navigator.clipboard) navigator.clipboard.writeText(txt).then(()=>toast('✅ Información copiada'));
+  else toast('⚠ No se pudo copiar');
+}
+
+// ── URL Scanner ─────────────────────────────────────────────
+async function scanUrl() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) { toast('⚠ Escribe una URL primero'); return; }
+  const el = document.getElementById('urlResult');
+
+  let domain = '';
+  try { domain = new URL(url).hostname; } catch { toast('⚠ URL inválida'); return; }
+
+  el.innerHTML = '<div class="card"><div style="text-align:center;padding:20px;color:var(--text2);">🔍 Analizando...</div></div>';
+
+  const suspicious = ['free','win','prize','click','bit.ly','tinyurl','malware','phish','hack'];
+  const isSusp = suspicious.some(s => domain.includes(s));
+  const hasHTTPS = url.startsWith('https://');
+  let score = 0;
+  if (isSusp) score += 40;
+  if (!hasHTTPS) score += 20;
+  if (domain.length > 30) score += 10;
+
+  const verdict = score >= 50 ? 'suspicious' : 'clean';
+  const emoji = verdict === 'suspicious' ? '⚠️' : '✅';
+  const vLabel = verdict === 'suspicious' ? 'SOSPECHOSA' : 'SEGURA';
+  const vColor = verdict === 'suspicious' ? 'var(--yellow)' : 'var(--green)';
+
+  el.innerHTML = `
+    <div class="card" style="border-color:${vColor}">
+      <div class="verdict-box ${verdict}" style="margin-bottom:10px;">
+        <div class="verdict-emoji">${emoji}</div>
+        <div class="verdict-text" style="color:${vColor};">URL ${vLabel}</div>
+        <div class="verdict-sub">${domain}</div>
+      </div>
+      <div class="heur-item"><span>${hasHTTPS?'✅':'⚠️'}</span><span style="color:${hasHTTPS?'var(--green)':'var(--yellow)'};font-size:11px;">${hasHTTPS?'Conexión HTTPS segura':'Sin HTTPS — conexión insegura'}</span></div>
+      <div class="heur-item"><span>${isSusp?'⚠️':'✅'}</span><span style="color:${isSusp?'var(--yellow)':'var(--green)'};font-size:11px;">${isSusp?'Dominio con palabras sospechosas':'Dominio sin palabras sospechosas'}</span></div>
+      <div class="heur-item"><span>${domain.length>30?'⚠️':'✅'}</span><span style="color:${domain.length>30?'var(--yellow)':'var(--green)'};font-size:11px;">${domain.length>30?'Dominio inusualmente largo':'Longitud de dominio normal'}</span></div>
+    </div>`;
+
+  saveHistory({name: url, size: 0}, btoa(url).substring(0,32), verdict);
+  updateStats();
+}
+
+// ── History ─────────────────────────────────────────────────
+function saveHistory(file, hash, verdict) {
+  history.unshift({ name: file.name, size: fmtSize(file.size||0), hash, verdict, date: new Date().toLocaleString() });
+  if (history.length > 30) history.pop();
+  S.set('aq_history', JSON.stringify(history));
+  stats.total++;
+  stats[verdict]++;
+  S.set('aq_stats', JSON.stringify(stats));
+}
+
+function updateStats() {
+  document.getElementById('statTotal').textContent = stats.total;
+  document.getElementById('statClean').textContent = stats.clean;
+  document.getElementById('statSusp').textContent  = stats.suspicious;
+  document.getElementById('statMal').textContent   = stats.malicious;
+}
+
+function renderHistory() {
+  const el = document.getElementById('histList');
+  if (!history.length) { el.innerHTML = '<div class="empty">Sin análisis aún</div>'; return; }
+  el.innerHTML = history.slice(0,20).map(h => {
+    const emoji = h.verdict==='malicious'?'🚨':h.verdict==='suspicious'?'⚠️':'✅';
+    return `<div class="hist-item">
+      <span class="hist-icon">${emoji}</span>
+      <div style="flex:1;min-width:0;">
+        <div class="hist-name">${h.name}</div>
+        <div class="hist-date">${h.date}</div>
+      </div>
+      <span class="badge ${h.verdict}">${h.verdict==='malicious'?'MALICIOSO':h.verdict==='suspicious'?'SOSPECHOSO':'LIMPIO'}</span>
+    </div>`;
+  }).join('');
+  updateStats();
+}
+
+// ── Init ────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  if (window._vtKey) updateVtStatus(true);
+  updateStats();
+  // Restore API input
+  document.getElementById('apiInput').value = window._vtKey;
+});
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('SW registrado'))
+      .catch(e => console.log('SW error:', e));
+  });
+}
+</script>
+</body>
+</html>

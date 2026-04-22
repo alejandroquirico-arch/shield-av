@@ -1,0 +1,33 @@
+{
+  "name": "Antivirus Alequebec",
+  "short_name": "AQ Antivirus",
+  "description": "Protección avanzada contra virus y malware",
+  "start_url": "./antivirus-alequebec-3.html",
+  "display": "standalone",
+  "background_color": "#0d0000",
+  "theme_color": "#1a0000",
+  "orientation": "portrait",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "security"],
+  "shortcuts": [
+    {
+      "name": "Escanear archivo",
+      "url": "./antivirus-alequebec-3.html",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

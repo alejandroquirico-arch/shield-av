@@ -235,10 +235,10 @@ body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif;min-hei
     <div id="histList"><div class="empty">Sin análisis aún</div></div>
   </div>
   <div class="stats-grid" style="margin-top:0;">
-    <div class="stat-box"><div class="stat-num" id="statTotal" style="color:var(--text);">0</div><div class="stat-lbl">TOTAL</div></div>
-    <div class="stat-box"><div class="stat-num" id="statClean" style="color:var(--green);">0</div><div class="stat-lbl">LIMPIOS</div></div>
-    <div class="stat-box"><div class="stat-num" id="statSusp" style="color:var(--yellow);">0</div><div class="stat-lbl">SOSPECHOSOS</div></div>
-    <div class="stat-box"><div class="stat-num" id="statMal" style="color:var(--red2);">0</div><div class="stat-lbl">MALICIOSOS</div></div>
+    <div class="stat-box" onclick="histFilter='all';histLimit=10;renderHistory('all')" style="cursor:pointer;"><div class="stat-num" id="statTotal" style="color:var(--text);">0</div><div class="stat-lbl">TOTAL</div></div>
+    <div class="stat-box" onclick="histFilter='all';histLimit=10;renderHistory('clean')" style="cursor:pointer;"><div class="stat-num" id="statClean" style="color:var(--green);">0</div><div class="stat-lbl">LIMPIOS ▼</div></div>
+    <div class="stat-box" onclick="histFilter='all';histLimit=10;renderHistory('suspicious')" style="cursor:pointer;"><div class="stat-num" id="statSusp" style="color:var(--yellow);">0</div><div class="stat-lbl">SOSP. ▼</div></div>
+    <div class="stat-box" onclick="histFilter='all';histLimit=10;renderHistory('malicious')" style="cursor:pointer;"><div class="stat-num" id="statMal" style="color:var(--red2);">0</div><div class="stat-lbl">MAL. ▼</div></div>
   </div>
 </div>
 
@@ -291,7 +291,7 @@ function showTab(id) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('panel-'+id).classList.add('active');
   event.currentTarget.classList.add('active');
-  if (id === 'history') renderHistory();
+  if (id === 'history') { histFilter='all'; histLimit=10; renderHistory(); }
 }
 
 // ── Toast ───────────────────────────────────────────────────
@@ -341,24 +341,39 @@ function heuristic(file) {
   let score  = 0;
   const checks = [];
 
-  const hiRisk = ['exe','bat','cmd','ps1','vbs','jar','msi','scr','pif','com','hta','reg'];
+  const hiRisk  = ['exe','bat','cmd','ps1','vbs','jar','msi','scr','pif','com','hta','reg'];
   const medRisk = ['zip','rar','7z','iso','doc','docm','xlsm'];
-  const safeExt = ['pdf','jpg','jpeg','png','gif','mp3','mp4','txt','csv','xlsx'];
+  // PDFs y archivos comunes son seguros — nunca se penalizan
+  const safeExt = ['pdf','jpg','jpeg','png','gif','bmp','webp','mp3','mp4','mov','avi',
+                   'txt','csv','xlsx','xls','pptx','ppt','odt','rtf','epub','mobi'];
 
   if (hiRisk.includes(ext))        { checks.push(['⚠️','Extensión alto riesgo: .'+ext,'bad']); score+=35; }
-  else if (safeExt.includes(ext))  { checks.push(['✅','Extensión segura: .'+ext,'ok']); }
+  else if (safeExt.includes(ext))  { checks.push(['✅','Extensión segura: .'+ext+' — documento normal','ok']); }
   else if (medRisk.includes(ext))  { checks.push(['🔍','Extensión riesgo medio: .'+ext,'warn']); score+=10; }
-  else                             { checks.push(['✅','Extensión desconocida: .'+ext,'ok']); }
+  else                             { checks.push(['✅','Extensión: .'+ext,'ok']); }
 
-  if (exts.length > 2)             { checks.push(['⚠️','Doble extensión detectada','bad']); score+=40; }
-  else                             { checks.push(['✅','Sin doble extensión','ok']); }
+  // Doble extensión solo es peligrosa en ejecutables (ej: factura.pdf.exe)
+  // Para PDFs y documentos normales NO se penaliza
+  const lastTwoExts = exts.slice(-2);
+  const hasDangerousDouble = exts.length > 2 && hiRisk.includes(ext);
+  const hasMimicDouble = exts.length > 1 && safeExt.includes(exts[exts.length-2]) && hiRisk.includes(ext);
+  if (hasMimicDouble)       { checks.push(['⚠️','Doble extensión peligrosa: archivo ejecutable disfrazado de '+exts[exts.length-2],'bad']); score+=50; }
+  else if (hasDangerousDouble) { checks.push(['⚠️','Múltiples extensiones sospechosas','bad']); score+=30; }
+  else                      { checks.push(['✅','Extensión sin anomalías','ok']); }
 
-  const malNames = ['crack','keygen','patch','activator','loader'];
-  if (malNames.some(s=>name.includes(s))) { checks.push(['⚠️','Nombre sospechoso','warn']); score+=20; }
-  else { checks.push(['✅','Nombre de archivo normal','ok']); }
+  // Nombres sospechosos solo penalizan ejecutables, NO documentos
+  const malNames = ['crack','keygen','patch','activator','loader','hack','exploit'];
+  const suspDocNames = ['invoice','factura','payment','update','setup','install'];
+  const hasMalName = malNames.some(s=>name.includes(s));
+  const hasSuspDocExe = suspDocNames.some(s=>name.includes(s)) && hiRisk.includes(ext);
+  if (hasMalName)      { checks.push(['⚠️','Nombre asociado a software malicioso','bad']); score+=25; }
+  else if (hasSuspDocExe) { checks.push(['⚠️','Ejecutable con nombre de documento (técnica común de engaño)','bad']); score+=30; }
+  else                 { checks.push(['✅','Nombre de archivo normal','ok']); }
 
-  if (file.size < 512 && hiRisk.includes(ext)) { checks.push(['⚠️','Ejecutable muy pequeño','bad']); score+=25; }
-  else { checks.push(['✅','Tamaño dentro del rango normal','ok']); }
+  // Tamaño sospechoso solo para ejecutables
+  if (file.size < 512 && hiRisk.includes(ext)) { checks.push(['⚠️','Ejecutable muy pequeño — posible dropper','bad']); score+=25; }
+  else if (file.size === 0) { checks.push(['⚠️','Archivo vacío','warn']); score+=10; }
+  else { checks.push(['✅','Tamaño normal: '+fmtSize(file.size),'ok']); }
 
   const verdict = score >= 50 ? 'malicious' : score >= 20 ? 'suspicious' : 'clean';
   return { checks, score: Math.min(score,100), verdict };
@@ -469,6 +484,24 @@ async function startScan() {
   logBox.innerHTML = '';
   fill.style.width = '0%';
 
+  // Add current file indicator above progress bar
+  let fileIndicator = document.getElementById('fileIndicator');
+  if (!fileIndicator) {
+    fileIndicator = document.createElement('div');
+    fileIndicator.id = 'fileIndicator';
+    fileIndicator.style.cssText = 'font-size:11px;color:var(--text2);margin-bottom:6px;font-family:monospace;';
+    progEl.insertBefore(fileIndicator, progEl.firstChild);
+  }
+
+  // Add progress label
+  let progLabel = document.getElementById('progLabel');
+  if (!progLabel) {
+    progLabel = document.createElement('div');
+    progLabel.id = 'progLabel';
+    progLabel.style.cssText = 'display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:4px;';
+    progEl.insertBefore(progLabel, progEl.firstChild);
+  }
+
   function log(msg, type='info') {
     const d = document.createElement('div');
     d.className = 'log-'+type;
@@ -477,44 +510,61 @@ async function startScan() {
     logBox.scrollTop = logBox.scrollHeight;
   }
 
-  function prog(p) { fill.style.width = p+'%'; }
+  function prog(p, label='') {
+    fill.style.width = p+'%';
+    if (progLabel) progLabel.innerHTML = '<span>'+label+'</span><span>'+Math.round(p)+'%</span>';
+  }
 
+  const total = scanQueue.length;
   const allResults = [];
 
-  for (let i = 0; i < scanQueue.length; i++) {
+  for (let i = 0; i < total; i++) {
     const file = scanQueue[i];
-    log('Analizando: '+file.name, 'info');
-    prog(Math.round((i/scanQueue.length)*60));
+    const baseP = Math.round((i/total)*100);
+    const nextP = Math.round(((i+1)/total)*100);
 
+    // Show which file is being scanned
+    fileIndicator.innerHTML = '📄 Analizando archivo '+(i+1)+' de '+total+': <span style="color:var(--gold2);">'+
+      (file.name.length>35?file.name.substring(0,35)+'...':file.name)+'</span>';
+
+    prog(baseP, 'Archivo '+(i+1)+'/'+total);
+    log('── Archivo '+(i+1)+'/'+total+': '+file.name, 'info');
+
+    prog(baseP+2, 'Calculando hash...');
     log('Calculando SHA-256...', 'info');
     const hash = await sha256(file);
     log('SHA-256: '+hash.substring(0,24)+'...', 'ok');
-    await sleep(200);
+    await sleep(150);
 
-    // Heuristic
+    prog(baseP+5, 'Análisis heurístico...');
     const h = heuristic(file);
     const hLabels = {clean:'✅ LIMPIO',suspicious:'⚠ SOSPECHOSO',malicious:'🚨 MALICIOSO'};
     log('Heurístico: '+hLabels[h.verdict], h.verdict==='clean'?'ok':h.verdict==='suspicious'?'warn':'bad');
+    await sleep(150);
 
-    // VirusTotal
     let vt = null;
     if (window._vtKey) {
+      prog(baseP+8, 'Consultando VirusTotal...');
       log('Consultando VirusTotal (+70 motores)...', 'info');
       vt = await checkVT(hash);
       if (vt) log('VT: '+vt.malicious+' detecciones de '+(vt.malicious+vt.harmless)+' motores', vt.malicious>0?'bad':'ok');
-      else log('Archivo no encontrado en VT (archivo nuevo)', 'warn');
+      else log('Archivo no encontrado en VT — archivo nuevo o desconocido', 'warn');
     }
 
     const verdict = vt ? (vt.malicious>0?'malicious':'clean') : h.verdict;
-    log('Veredicto: '+hLabels[verdict], verdict==='clean'?'ok':verdict==='suspicious'?'warn':'bad');
+    log('Veredicto final: '+hLabels[verdict], verdict==='clean'?'ok':verdict==='suspicious'?'warn':'bad');
     allResults.push({ file, hash, h, vt, verdict });
     saveHistory(file, hash, verdict);
+    prog(nextP, i+1 < total ? 'Siguiente archivo...' : 'Completado');
+    await sleep(200);
   }
 
-  prog(100);
-  log('✅ Análisis completo — '+scanQueue.length+' archivo(s)', 'ok');
-  await sleep(300);
+  prog(100, '✅ Análisis completo');
+  log('✅ Análisis completo — '+total+' archivo(s) procesado(s)', 'ok');
+  await sleep(500);
   progEl.style.display = 'none';
+  if (fileIndicator) fileIndicator.remove();
+  if (progLabel) progLabel.remove();
   showResults(allResults);
 }
 
@@ -908,36 +958,131 @@ async function scanUrl() {
 
 // ── History ─────────────────────────────────────────────────
 function saveHistory(file, hash, verdict) {
-  history.unshift({ name: file.name, size: fmtSize(file.size||0), hash, verdict, date: new Date().toLocaleString() });
-  if (history.length > 30) history.pop();
+  const ext = file.name.split('.').pop().toLowerCase();
+  const folder = ['apk','xapk'].includes(ext)?'Downloads/':
+                 ['jpg','jpeg','png','gif','webp','heic'].includes(ext)?'DCIM/ o Pictures/':
+                 ['mp4','mkv','avi','mov'].includes(ext)?'Movies/':
+                 ['mp3','wav','flac'].includes(ext)?'Music/':
+                 ['pdf','doc','docx','xls','xlsx','csv','txt'].includes(ext)?'Documents/ o Downloads/':
+                 'Downloads/';
+  const path = file.webkitRelativePath || folder + file.name;
+  history.unshift({ name: file.name, size: fmtSize(file.size||0), hash, verdict, date: new Date().toLocaleString(), path, folder, ext });
+  if (history.length > 100) history.pop();
   S.set('aq_history', JSON.stringify(history));
   stats.total++;
-  stats[verdict]++;
+  stats[verdict] = (stats[verdict]||0) + 1;
   S.set('aq_stats', JSON.stringify(stats));
 }
 
 function updateStats() {
-  document.getElementById('statTotal').textContent = stats.total;
-  document.getElementById('statClean').textContent = stats.clean;
-  document.getElementById('statSusp').textContent  = stats.suspicious;
-  document.getElementById('statMal').textContent   = stats.malicious;
+  document.getElementById('statTotal').textContent = stats.total || 0;
+  document.getElementById('statClean').textContent = stats.clean || 0;
+  document.getElementById('statSusp').textContent  = stats.suspicious || 0;
+  document.getElementById('statMal').textContent   = stats.malicious || 0;
 }
 
-function renderHistory() {
+let histFilter = 'all';
+let histLimit  = 10;
+
+function renderHistory(filter) {
+  if (filter !== undefined) histFilter = filter;
   const el = document.getElementById('histList');
   if (!history.length) { el.innerHTML = '<div class="empty">Sin análisis aún</div>'; return; }
-  el.innerHTML = history.slice(0,20).map(h => {
-    const emoji = h.verdict==='malicious'?'🚨':h.verdict==='suspicious'?'⚠️':'✅';
-    return `<div class="hist-item">
-      <span class="hist-icon">${emoji}</span>
-      <div style="flex:1;min-width:0;">
-        <div class="hist-name">${h.name}</div>
-        <div class="hist-date">${h.date}</div>
+
+  // Filter buttons
+  const filterBar = `<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+    ${[['all','TODOS','var(--text)'],['clean','LIMPIOS','var(--green)'],['suspicious','SOSPECHOSOS','var(--yellow)'],['malicious','MALICIOSOS','var(--red2)']].map(([v,l,c])=>`
+      <button onclick="histLimit=10;renderHistory('${v}')" style="
+        flex:1;min-width:60px;padding:6px 4px;border-radius:6px;font-size:10px;cursor:pointer;font-weight:bold;
+        background:${histFilter===v?'rgba(200,140,10,0.2)':'transparent'};
+        border:1px solid ${histFilter===v?'var(--gold)':'var(--border)'};
+        color:${histFilter===v?'var(--gold2)':c};">
+        ${l} <span style="font-size:9px;">(${v==='all'?history.length:history.filter(h=>h.verdict===v).length})</span>
+      </button>`).join('')}
+  </div>`;
+
+  const filtered = histFilter === 'all' ? history : history.filter(h => h.verdict === histFilter);
+  const shown    = filtered.slice(0, histLimit);
+
+  if (!filtered.length) {
+    el.innerHTML = filterBar + '<div class="empty">Sin resultados para este filtro</div>';
+    return;
+  }
+
+  const items = shown.map((h,i) => {
+    const emoji  = h.verdict==='malicious'?'🚨':h.verdict==='suspicious'?'⚠️':'✅';
+    const vColor = h.verdict==='malicious'?'var(--red2)':h.verdict==='suspicious'?'var(--yellow)':'var(--green)';
+    const vLabel = h.verdict==='malicious'?'MALICIOSO':h.verdict==='suspicious'?'SOSPECHOSO':'LIMPIO';
+    const extIcon= ['apk','xapk'].includes(h.ext||'')?'📱':
+                   ['jpg','jpeg','png','gif'].includes(h.ext||'')?'🖼️':
+                   ['mp4','mkv','avi'].includes(h.ext||'')?'🎬':
+                   ['mp3','wav'].includes(h.ext||'')?'🎵':
+                   ['pdf'].includes(h.ext||'')?'📄':
+                   ['zip','rar','7z'].includes(h.ext||'')?'🗜️':'📁';
+    return `<div style="
+      border-bottom:1px solid var(--border);padding:10px 0;cursor:pointer;
+      ${i===0?'':''}
+    " onclick="toggleHistDetail(this, ${i})">
+      <div style="display:flex;gap:10px;align-items:center;">
+        <span style="font-size:20px;">${extIcon}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;color:var(--text);word-break:break-all;">${h.name}</div>
+          <div style="font-size:10px;color:var(--text2);">${h.date} · ${h.size}</div>
+        </div>
+        <span style="
+          display:inline-block;padding:3px 8px;border-radius:20px;font-size:9px;font-weight:bold;
+          background:${h.verdict==='malicious'?'rgba(200,0,0,0.2)':h.verdict==='suspicious'?'rgba(255,200,0,0.2)':'rgba(0,200,100,0.2)'};
+          color:${vColor};border:1px solid ${vColor};white-space:nowrap;">
+          ${emoji} ${vLabel}
+        </span>
       </div>
-      <span class="badge ${h.verdict}">${h.verdict==='malicious'?'MALICIOSO':h.verdict==='suspicious'?'SOSPECHOSO':'LIMPIO'}</span>
+      <div class="hist-detail-${i}" style="display:none;margin-top:10px;background:var(--bg3);border-radius:8px;padding:10px;">
+        <div style="font-size:10px;color:var(--text2);margin-bottom:6px;letter-spacing:1px;">📍 UBICACIÓN DEL ARCHIVO</div>
+        <div style="font-size:11px;color:var(--gold2);margin-bottom:4px;">${h.folder||'Downloads/'}</div>
+        <div style="font-size:11px;color:var(--text);margin-bottom:10px;">${h.name}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <a href="content://com.android.externalstorage.documents/root/primary" target="_blank" style="
+            display:inline-flex;align-items:center;gap:4px;
+            background:rgba(200,140,10,0.15);border:1px solid var(--gold);
+            color:var(--gold2);padding:6px 10px;border-radius:6px;font-size:10px;text-decoration:none;">
+            📁 Abrir explorador
+          </a>
+          <a href="https://www.virustotal.com/gui/search/${h.hash}" target="_blank" style="
+            display:inline-flex;align-items:center;gap:4px;
+            background:rgba(255,102,0,0.15);border:1px solid #ff6600;
+            color:#ff9944;padding:6px 10px;border-radius:6px;font-size:10px;text-decoration:none;">
+            🛡️ Ver en VT
+          </a>
+          <button onclick="event.stopPropagation();navigator.clipboard&&navigator.clipboard.writeText('${h.hash}').then(()=>toast('✅ Hash copiado'))" style="
+            background:rgba(100,100,100,0.15);border:1px solid #555;
+            color:#aaa;padding:6px 10px;border-radius:6px;font-size:10px;cursor:pointer;">
+            📋 Copiar hash
+          </button>
+        </div>
+        ${h.verdict!=='clean'?`
+        <div style="margin-top:8px;padding:8px;background:rgba(200,0,0,0.08);border-radius:6px;border-left:3px solid ${vColor};">
+          <div style="font-size:10px;color:${vColor};font-weight:bold;margin-bottom:4px;">🗑️ CÓMO ELIMINAR</div>
+          <div style="font-size:11px;color:var(--text2);">Abre tu explorador → ve a <strong style="color:var(--gold2);">${h.folder||'Downloads/'}</strong> → mantén presionado <strong>${h.name}</strong> → Eliminar</div>
+        </div>`:''}
+      </div>
     </div>`;
   }).join('');
+
+  const showMoreBtn = filtered.length > histLimit ?
+    `<button onclick="histLimit+=10;renderHistory()" style="
+      width:100%;margin-top:10px;padding:12px;background:transparent;
+      border:1px solid var(--gold);color:var(--gold2);border-radius:8px;
+      font-size:12px;cursor:pointer;">
+      👁️ VER MÁS (${filtered.length - histLimit} restantes)
+    </button>` : '';
+
+  el.innerHTML = filterBar + items + showMoreBtn;
   updateStats();
+}
+
+function toggleHistDetail(el, i) {
+  const detail = el.querySelector('.hist-detail-'+i);
+  if (detail) detail.style.display = detail.style.display === 'none' ? 'block' : 'none';
 }
 
 // ── Init ────────────────────────────────────────────────────

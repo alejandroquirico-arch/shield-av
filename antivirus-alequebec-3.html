@@ -640,27 +640,70 @@ function showResults(results) {
           <div class="info-item" style="grid-column:1/-1"><div class="info-label">SHA-256</div><div class="info-val">${r.hash.substring(0,32)}...</div></div>
         </div>`;
 
-    // VT results
+    // VT results with clickable malware names
     if (r.vt) {
+      const detectedEngines = r.vt.engines.filter(e=>e.detected);
       html += `
-        <div style="margin-top:10px;background:var(--bg3);border-radius:8px;padding:10px;">
-          <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:8px;">☁ VIRUSTOTAL — ${r.vt.malicious+r.vt.harmless} MOTORES</div>
-          <div style="display:flex;gap:8px;margin-bottom:8px;">
-            <div style="flex:1;text-align:center;background:rgba(200,0,0,0.1);border-radius:6px;padding:8px;">
-              <div style="font-size:22px;color:var(--red2);font-weight:bold;">${r.vt.malicious}</div>
-              <div style="font-size:9px;color:var(--text2);">DETECTARON</div>
+        <div style="margin-top:10px;background:var(--bg3);border-radius:8px;padding:12px;">
+          <div style="font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:10px;">☁ VIRUSTOTAL — ${r.vt.malicious+r.vt.harmless} MOTORES ANALIZARON</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;">
+            <div style="text-align:center;background:rgba(200,0,0,0.12);border-radius:8px;padding:10px;border:1px solid var(--red);">
+              <div style="font-size:26px;color:var(--red2);font-weight:bold;">${r.vt.malicious}</div>
+              <div style="font-size:9px;color:var(--text2);margin-top:2px;">DETECTARON</div>
             </div>
-            <div style="flex:1;text-align:center;background:rgba(0,200,100,0.1);border-radius:6px;padding:8px;">
-              <div style="font-size:22px;color:var(--green);font-weight:bold;">${r.vt.harmless}</div>
-              <div style="font-size:9px;color:var(--text2);">LIMPIOS</div>
+            <div style="text-align:center;background:rgba(0,200,100,0.1);border-radius:8px;padding:10px;border:1px solid var(--green);">
+              <div style="font-size:26px;color:var(--green);font-weight:bold;">${r.vt.harmless}</div>
+              <div style="font-size:9px;color:var(--text2);margin-top:2px;">LIMPIOS</div>
+            </div>
+            <div style="text-align:center;background:rgba(200,140,10,0.1);border-radius:8px;padding:10px;border:1px solid var(--gold);">
+              <div style="font-size:26px;color:var(--gold2);font-weight:bold;">${r.vt.malicious+r.vt.harmless}</div>
+              <div style="font-size:9px;color:var(--text2);margin-top:2px;">TOTAL</div>
             </div>
           </div>
-          ${r.vt.engines.filter(e=>e.detected).slice(0,5).map(e=>`
-            <div style="font-size:11px;padding:4px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
-              <span style="color:var(--text2);">${e.name}</span>
-              <span style="color:var(--red2);">🔴 ${e.result}</span>
-            </div>`).join('')}
+          ${detectedEngines.length > 0 ? `
+          <div style="font-size:10px;color:var(--red2);letter-spacing:1px;margin-bottom:8px;">🔴 MOTORES QUE DETECTARON AMENAZA — toca el nombre para más info:</div>
+          ${detectedEngines.slice(0,8).map(e => {
+            const q = encodeURIComponent('Malware ' + e.result + ' qué es cómo eliminar');
+            const gUrl = 'https://www.google.com/search?q=' + q;
+            const gemUrl = 'https://gemini.google.com/app?q=' + encodeURIComponent('Explícame qué es el malware ' + e.result + ' y cómo protegerme');
+            const vtUrl = 'https://www.virustotal.com/gui/search/' + encodeURIComponent(e.result||'');
+            return `<div style="padding:8px 0;border-bottom:1px solid var(--border);">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                <span style="color:var(--text2);font-size:11px;">${e.name}</span>
+                <span style="color:var(--red2);font-size:11px;font-weight:bold;">🔴 ${e.result||'detected'}</span>
+              </div>
+              <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                <a href="${gUrl}" target="_blank" style="
+                  display:inline-flex;align-items:center;gap:3px;
+                  background:rgba(66,133,244,0.15);border:1px solid #4285f4;
+                  color:#4285f4;padding:3px 8px;border-radius:20px;
+                  font-size:9px;text-decoration:none;">🔍 Google</a>
+                <a href="${gemUrl}" target="_blank" style="
+                  display:inline-flex;align-items:center;gap:3px;
+                  background:rgba(138,43,226,0.15);border:1px solid #8a2be2;
+                  color:#c084fc;padding:3px 8px;border-radius:20px;
+                  font-size:9px;text-decoration:none;">🤖 Gemini</a>
+                <a href="${vtUrl}" target="_blank" style="
+                  display:inline-flex;align-items:center;gap:3px;
+                  background:rgba(255,102,0,0.15);border:1px solid #ff6600;
+                  color:#ff9944;padding:3px 8px;border-radius:20px;
+                  font-size:9px;text-decoration:none;">🛡️ VirusTotal</a>
+              </div>
+            </div>`;
+          }).join('')}` : `<div style="color:var(--green);font-size:12px;text-align:center;padding:8px;">✅ Ningún motor detectó amenazas</div>`}
         </div>`;
+    } else if (window._vtKey) {
+      html += `<div style="margin-top:10px;background:var(--bg3);border-radius:8px;padding:12px;">
+        <div style="font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:6px;">☁ VIRUSTOTAL</div>
+        <div style="font-size:12px;color:var(--text2);">⚠️ Archivo no encontrado en la base de datos de VirusTotal — es posible que sea muy nuevo o no haya sido analizado antes.</div>
+        <a href="https://www.virustotal.com/gui/home/upload" target="_blank" style="
+          display:inline-flex;align-items:center;gap:6px;margin-top:8px;
+          background:rgba(255,102,0,0.15);border:1px solid #ff6600;
+          color:#ff9944;padding:8px 14px;border-radius:8px;
+          font-size:11px;text-decoration:none;">
+          🛡️ Subir manualmente a VirusTotal
+        </a>
+      </div>`;
     }
 
     // Malware type card (only if malicious)
@@ -671,9 +714,26 @@ function showResults(results) {
         <div style="margin-top:10px;background:rgba(0,0,0,0.4);border:1px solid ${mw.color};border-radius:10px;padding:14px;">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
             <span style="font-size:32px;">${mw.emoji}</span>
-            <div>
+            <div style="flex:1;">
               <div style="font-size:13px;font-weight:bold;color:${mw.color};">${mw.label}</div>
               <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-top:2px;">TIPO DE MALWARE DETECTADO</div>
+              <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;">
+                <a href="https://www.google.com/search?q=${encodeURIComponent('Qué es ' + mw.label + ' malware cómo protegerme')}" target="_blank" style="
+                  display:inline-flex;align-items:center;gap:3px;
+                  background:rgba(66,133,244,0.15);border:1px solid #4285f4;
+                  color:#4285f4;padding:3px 8px;border-radius:20px;
+                  font-size:9px;text-decoration:none;">🔍 Google</a>
+                <a href="https://gemini.google.com/app?q=${encodeURIComponent('Explícame de forma simple qué es ' + mw.label + ' y cómo eliminar este tipo de malware')}" target="_blank" style="
+                  display:inline-flex;align-items:center;gap:3px;
+                  background:rgba(138,43,226,0.15);border:1px solid #8a2be2;
+                  color:#c084fc;padding:3px 8px;border-radius:20px;
+                  font-size:9px;text-decoration:none;">🤖 Gemini</a>
+                <a href="https://www.google.com/search?q=${encodeURIComponent(mw.label + ' malware site:wikipedia.org')}" target="_blank" style="
+                  display:inline-flex;align-items:center;gap:3px;
+                  background:rgba(200,200,200,0.1);border:1px solid #888;
+                  color:#ccc;padding:3px 8px;border-radius:20px;
+                  font-size:9px;text-decoration:none;">📖 Wikipedia</a>
+              </div>
             </div>
           </div>
 
@@ -699,12 +759,41 @@ function showResults(results) {
         </div>`;
     }
 
-    // Heuristic
-    html += `<div style="margin-top:10px;">
-      <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:6px;">🔍 ANÁLISIS HEURÍSTICO${r.vt?' (segunda opinión)':''}</div>`;
+    // Heuristic with clickable links
+    html += `<div style="margin-top:10px;background:var(--bg3);border-radius:8px;padding:12px;">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:10px;">🔍 ANÁLISIS HEURÍSTICO${r.vt?' — SEGUNDA OPINIÓN':' — MOTOR PRINCIPAL'}</div>`;
     r.h.checks.forEach(([icon,name,status]) => {
       const c = status==='ok'?'var(--green)':status==='warn'?'var(--yellow)':'var(--red2)';
-      html += `<div class="heur-item"><span>${icon}</span><span style="color:${c};font-size:11px;">${name}</span></div>`;
+      const isClickable = status !== 'ok';
+      const query = encodeURIComponent('¿Qué es ' + name + ' en archivos malware? explicación simple');
+      const googleUrl = 'https://www.google.com/search?q=' + query;
+      const geminiUrl = 'https://gemini.google.com/app?q=' + query;
+      if (isClickable) {
+        html += `<div class="heur-item" style="flex-direction:column;align-items:flex-start;gap:6px;">
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span>${icon}</span>
+            <span style="color:${c};font-size:11px;font-weight:bold;">${name}</span>
+          </div>
+          <div style="display:flex;gap:6px;padding-left:24px;flex-wrap:wrap;">
+            <a href="${googleUrl}" target="_blank" style="
+              display:inline-flex;align-items:center;gap:4px;
+              background:rgba(66,133,244,0.15);border:1px solid #4285f4;
+              color:#4285f4;padding:4px 10px;border-radius:20px;
+              font-size:10px;text-decoration:none;cursor:pointer;">
+              🔍 Buscar en Google
+            </a>
+            <a href="${geminiUrl}" target="_blank" style="
+              display:inline-flex;align-items:center;gap:4px;
+              background:rgba(138,43,226,0.15);border:1px solid #8a2be2;
+              color:#c084fc;padding:4px 10px;border-radius:20px;
+              font-size:10px;text-decoration:none;cursor:pointer;">
+              🤖 Preguntar a Gemini
+            </a>
+          </div>
+        </div>`;
+      } else {
+        html += `<div class="heur-item"><span>${icon}</span><span style="color:${c};font-size:11px;">${name}</span></div>`;
+      }
     });
     html += '</div>';
 
@@ -817,8 +906,30 @@ function renderHistory() {
 window.addEventListener('DOMContentLoaded', () => {
   if (window._vtKey) updateVtStatus(true);
   updateStats();
-  // Restore API input
   document.getElementById('apiInput').value = window._vtKey;
+
+  // ── Share Target: recibir archivo compartido ──────────────
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', e => {
+      if (e.data && e.data.type === 'SHARE_FILE' && e.data.file) {
+        const file = e.data.file;
+        onFilesSelected([file], 'compartido');
+        // Cambiar a tab scanner
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('panel-scanner').classList.add('active');
+        document.querySelector('.tab').classList.add('active');
+        toast('📥 Archivo recibido: ' + file.name + ' — toca ANALIZAR');
+      }
+    });
+  }
+
+  // ── Leer parámetros URL (cuando se abre desde Share) ──────
+  const params = new URLSearchParams(window.location.search);
+  const sharedTitle = params.get('title');
+  if (sharedTitle) {
+    toast('📥 Abre tu app y selecciona el archivo: ' + sharedTitle);
+  }
 });
 </script>
 <script>

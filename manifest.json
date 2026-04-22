@@ -23,6 +23,22 @@
     }
   ],
   "categories": ["utilities", "security"],
+  "share_target": {
+    "action": "./antivirus-alequebec-3.html",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "file",
+          "accept": ["*/*"]
+        }
+      ]
+    }
+  },
   "shortcuts": [
     {
       "name": "Escanear archivo",

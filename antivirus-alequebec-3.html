@@ -273,12 +273,97 @@ body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif;min-hei
     <div id="connBanner"></div>
   </div>
 
+  <!-- Koodous API Key -->
+  <div class="card">
+    <div class="card-title">🔬 API Key — Koodous (Android)</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px;">
+      Especializado en APKs Android. Gratis en 
+      <a href="https://koodous.com" target="_blank" style="color:#aa44ff;">koodous.com</a> → Registro → API
+    </p>
+    <div class="api-row">
+      <input class="api-input" id="koodousInput" type="password" placeholder="Pega tu API Key de Koodous">
+      <button class="btn-activar" style="background:linear-gradient(135deg,#7722cc,#440088);" onclick="activarKoodous()">ACTIVAR</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button onclick="
+        document.getElementById('koodousInput').type=document.getElementById('koodousInput').type==='password'?'text':'password';
+        this.textContent=document.getElementById('koodousInput').type==='password'?'👁 Ver':'🙈 Ocultar';
+      " style="flex:1;background:transparent;border:1px solid var(--border);color:var(--text2);padding:8px;border-radius:6px;font-size:11px;cursor:pointer;">👁 Ver</button>
+      <button onclick="
+        if(confirm('¿Borrar API Key de Koodous?')){S.del('koodous_key');window._koodousKey='';document.getElementById('koodousInput').value='';toast('Koodous API Key eliminada');}
+      " style="flex:1;background:transparent;border:1px solid var(--red);color:var(--red2);padding:8px;border-radius:6px;font-size:11px;cursor:pointer;">🗑️ Borrar</button>
+    </div>
+    <div id="koodousBanner" style="display:none;margin-top:8px;padding:10px;border-radius:8px;font-size:12px;font-weight:bold;text-align:center;"></div>
+  </div>
+
+  <!-- Hybrid Analysis API Key -->
+  <div class="card">
+    <div class="card-title">⚗️ API Key — Hybrid Analysis</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px;">
+      Sandbox dinámico 100% gratis en 
+      <a href="https://www.hybrid-analysis.com" target="_blank" style="color:#ff4488;">hybrid-analysis.com</a> → Register → API Key
+    </p>
+    <div class="api-row">
+      <input class="api-input" id="hybridInput" type="password" placeholder="Pega tu API Key de Hybrid Analysis">
+      <button class="btn-activar" style="background:linear-gradient(135deg,#cc1155,#880033);" onclick="activarHybrid()">ACTIVAR</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button onclick="
+        document.getElementById('hybridInput').type=document.getElementById('hybridInput').type==='password'?'text':'password';
+        this.textContent=document.getElementById('hybridInput').type==='password'?'👁 Ver':'🙈 Ocultar';
+      " style="flex:1;background:transparent;border:1px solid var(--border);color:var(--text2);padding:8px;border-radius:6px;font-size:11px;cursor:pointer;">👁 Ver</button>
+      <button onclick="
+        if(confirm('¿Borrar API Key de Hybrid Analysis?')){S.del('hybrid_key');window._hybridKey='';document.getElementById('hybridInput').value='';toast('Hybrid Analysis API Key eliminada');}
+      " style="flex:1;background:transparent;border:1px solid var(--red);color:var(--red2);padding:8px;border-radius:6px;font-size:11px;cursor:pointer;">🗑️ Borrar</button>
+    </div>
+    <div id="hybridBanner" style="display:none;margin-top:8px;padding:10px;border-radius:8px;font-size:12px;font-weight:bold;text-align:center;"></div>
+  </div>
+
+  <!-- Gemini AI -->
+  <div class="card">
+    <div class="card-title">🤖 API Key — Google Gemini IA</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px;">
+      IA gratuita que explica el archivo inteligentemente. Obtén tu clave gratis en
+      <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#4285f4;">aistudio.google.com</a>
+    </p>
+    <div class="api-row">
+      <input class="api-input" id="geminiInput" type="password" placeholder="Pega tu API Key de Gemini">
+      <button class="btn-activar" style="background:linear-gradient(135deg,#1a73e8,#0d47a1);" onclick="activarGemini()">ACTIVAR</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button onclick="document.getElementById('geminiInput').type=document.getElementById('geminiInput').type==='password'?'text':'password';this.textContent=document.getElementById('geminiInput').type==='password'?'👁 Ver':'🙈 Ocultar';"
+        style="flex:1;background:transparent;border:1px solid var(--border);color:var(--text2);padding:8px;border-radius:6px;font-size:11px;cursor:pointer;">👁 Ver</button>
+      <button onclick="if(confirm('¿Borrar API Key de Gemini?')){S.del('gemini_key');window._geminiKey='';document.getElementById('geminiInput').value='';toast('Gemini API Key eliminada');}"
+        style="flex:1;background:transparent;border:1px solid var(--red);color:var(--red2);padding:8px;border-radius:6px;font-size:11px;cursor:pointer;">🗑️ Borrar</button>
+    </div>
+    <div id="geminiBanner" style="display:none;margin-top:8px;padding:10px;border-radius:8px;font-size:12px;font-weight:bold;text-align:center;"></div>
+  </div>
+
+  <!-- MetaDefender -->
+  <div class="card">
+    <div class="card-title">🛡️ API Key — MetaDefender (30+ motores)</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px;">
+      30+ motores antivirus gratis. Registro en
+      <a href="https://metadefender.opswat.com" target="_blank" style="color:#00cc88;">metadefender.opswat.com</a> → API Key
+    </p>
+    <div class="api-row">
+      <input class="api-input" id="metaInput" type="password" placeholder="Pega tu API Key de MetaDefender">
+      <button class="btn-activar" style="background:linear-gradient(135deg,#00aa66,#006644);" onclick="activarMeta()">ACTIVAR</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button onclick="document.getElementById('metaInput').type=document.getElementById('metaInput').type==='password'?'text':'password';this.textContent=document.getElementById('metaInput').type==='password'?'👁 Ver':'🙈 Ocultar';"
+        style="flex:1;background:transparent;border:1px solid var(--border);color:var(--text2);padding:8px;border-radius:6px;font-size:11px;cursor:pointer;">👁 Ver</button>
+      <button onclick="if(confirm('¿Borrar API Key de MetaDefender?')){S.del('meta_key');window._metaKey='';document.getElementById('metaInput').value='';toast('MetaDefender API Key eliminada');}"
+        style="flex:1;background:transparent;border:1px solid var(--red);color:var(--red2);padding:8px;border-radius:6px;font-size:11px;cursor:pointer;">🗑️ Borrar</button>
+    </div>
+    <div id="metaBanner" style="display:none;margin-top:8px;padding:10px;border-radius:8px;font-size:12px;font-weight:bold;text-align:center;"></div>
+  </div>
+
   <div class="card">
     <div class="card-title">ℹ️ Acerca de</div>
     <div style="font-size:12px;color:var(--text2);line-height:1.8;">
       <div>Versión: <span style="color:var(--text);">1.0.0</span></div>
-      <div>Motor: <span style="color:var(--text);">Heurístico + VirusTotal</span></div>
-      <div>Motores VT: <span style="color:var(--text);">+70 antivirus</span></div>
+      <div>Motores: <span style="color:var(--text);">Heurístico + VirusTotal + Koodous + Hybrid Analysis + Gemini IA + MetaDefender</span></div>
       <div>Desarrollado por: <span style="color:var(--gold2);">Alequebec</span></div>
     </div>
   </div>
@@ -320,7 +405,11 @@ const S = (() => {
 let scanQueue = [];
 let history   = JSON.parse(S.get('aq_history','[]'));
 let stats     = JSON.parse(S.get('aq_stats','{"total":0,"clean":0,"suspicious":0,"malicious":0}'));
-window._vtKey = S.get('vt_api_key','');
+window._vtKey      = S.get('vt_api_key','');
+window._koodousKey = S.get('koodous_key','');
+window._hybridKey  = S.get('hybrid_key','');
+window._geminiKey  = S.get('gemini_key','');
+window._metaKey    = S.get('meta_key','');
 
 // ── Tabs ────────────────────────────────────────────────────
 function showTab(id) {
@@ -437,6 +526,205 @@ async function checkVT(hash) {
       }))
     };
   } catch { return null; }
+}
+
+// ── Koodous API ────────────────────────────────────────────
+async function checkKoodous(hash) {
+  const key = window._koodousKey;
+  if (!key) return null;
+  try {
+    const r = await fetch('https://analyst.koodous.com/api/apks?search='+hash, {
+      headers: { 'Authorization': 'Token '+key }
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (!d.results || !d.results.length) return { found: false };
+    const apk = d.results[0];
+    return {
+      found: true,
+      detected: apk.detected || false,
+      rating: apk.rating || 0,
+      votes: apk.corrupted || 0,
+      name: apk.app_name || '',
+      package: apk.package_name || ''
+    };
+  } catch { return null; }
+}
+
+async function activarKoodous() {
+  const key = document.getElementById('koodousInput').value.trim();
+  if (!key) { toast('⚠ Pega tu API Key de Koodous'); return; }
+  const btn = document.querySelector('[onclick="activarKoodous()"]');
+  const banner = document.getElementById('koodousBanner');
+  btn.textContent = '...'; btn.disabled = true;
+  try {
+    const r = await fetch('https://analyst.koodous.com/api/apks?page_size=1', {
+      headers: { 'Authorization': 'Token '+key }
+    });
+    if (r.status === 401 || r.status === 403) {
+      banner.className=''; banner.style.cssText='display:block;margin-top:8px;padding:10px;border-radius:8px;background:rgba(200,0,0,0.15);border:1px solid var(--red2);color:var(--red2);font-size:12px;font-weight:bold;text-align:center;';
+      banner.textContent='❌ API Key inválida — Koodous rechazó la clave';
+    } else {
+      window._koodousKey = key; S.set('koodous_key', key);
+      banner.style.cssText='display:block;margin-top:8px;padding:10px;border-radius:8px;background:rgba(0,200,100,0.15);border:1px solid var(--green);color:var(--green);font-size:12px;font-weight:bold;text-align:center;';
+      banner.textContent='✅ CONEXIÓN EXITOSA — Koodous activado para APKs Android';
+      toast('✅ Koodous activado');
+    }
+  } catch {
+    window._koodousKey = key; S.set('koodous_key', key);
+    banner.style.cssText='display:block;margin-top:8px;padding:10px;border-radius:8px;background:rgba(0,200,100,0.15);border:1px solid var(--green);color:var(--green);font-size:12px;font-weight:bold;text-align:center;';
+    banner.textContent='✅ API Key guardada — se verificará al analizar';
+  } finally { btn.textContent='ACTIVAR'; btn.disabled=false; }
+}
+
+// ── Hybrid Analysis API ─────────────────────────────────────
+async function checkHybrid(hash) {
+  const key = window._hybridKey;
+  if (!key) return null;
+  try {
+    const r = await fetch('https://www.hybrid-analysis.com/api/v2/search/hash', {
+      method: 'POST',
+      headers: { 'api-key': key, 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'Falcon Sandbox' },
+      body: 'hash='+hash
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (!d || !d.length) return { found: false };
+    const result = d[0];
+    return {
+      found: true,
+      verdict: result.verdict || 'unknown',
+      threat_score: result.threat_score || 0,
+      threat_level: result.threat_level || 0,
+      malware_family: result.vx_family || '',
+      av_detect: result.av_detect || 0
+    };
+  } catch { return null; }
+}
+
+async function activarHybrid() {
+  const key = document.getElementById('hybridInput').value.trim();
+  if (!key) { toast('⚠ Pega tu API Key de Hybrid Analysis'); return; }
+  const btn = document.querySelector('[onclick="activarHybrid()"]');
+  const banner = document.getElementById('hybridBanner');
+  btn.textContent = '...'; btn.disabled = true;
+  try {
+    const r = await fetch('https://www.hybrid-analysis.com/api/v2/key/current', {
+      headers: { 'api-key': key, 'User-Agent': 'Falcon Sandbox' }
+    });
+    if (r.status === 401 || r.status === 403) {
+      banner.style.cssText='display:block;margin-top:8px;padding:10px;border-radius:8px;background:rgba(200,0,0,0.15);border:1px solid var(--red2);color:var(--red2);font-size:12px;font-weight:bold;text-align:center;';
+      banner.textContent='❌ API Key inválida — Hybrid Analysis rechazó la clave';
+    } else {
+      window._hybridKey = key; S.set('hybrid_key', key);
+      banner.style.cssText='display:block;margin-top:8px;padding:10px;border-radius:8px;background:rgba(0,200,100,0.15);border:1px solid var(--green);color:var(--green);font-size:12px;font-weight:bold;text-align:center;';
+      banner.textContent='✅ CONEXIÓN EXITOSA — Hybrid Analysis activado';
+      toast('✅ Hybrid Analysis activado');
+    }
+  } catch {
+    window._hybridKey = key; S.set('hybrid_key', key);
+    banner.style.cssText='display:block;margin-top:8px;padding:10px;border-radius:8px;background:rgba(0,200,100,0.15);border:1px solid var(--green);color:var(--green);font-size:12px;font-weight:bold;text-align:center;';
+    banner.textContent='✅ API Key guardada — se verificará al analizar';
+  } finally { btn.textContent='ACTIVAR'; btn.disabled=false; }
+}
+
+// ── Google Gemini IA ────────────────────────────────────────
+async function analyzeWithGemini(fileName, fileSize, ext, vtMalicious, vtTotal, hVerdict) {
+  const key = window._geminiKey;
+  if (!key) return null;
+  try {
+    const prompt = `Eres un experto en seguridad informática Android. Analiza este archivo y da una opinión concisa:
+Nombre: ${fileName}
+Extensión: .${ext}
+Tamaño: ${fileSize}
+Resultado VirusTotal: ${vtMalicious !== null ? vtMalicious+' de '+vtTotal+' motores lo detectaron' : 'No consultado'}
+Análisis heurístico: ${hVerdict}
+
+Responde en español con máximo 3 oraciones: 1) Si es peligroso o seguro, 2) Por qué, 3) Qué hacer. Sé directo.`;
+
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    return d.candidates?.[0]?.content?.parts?.[0]?.text || null;
+  } catch { return null; }
+}
+
+async function activarGemini() {
+  const key = document.getElementById('geminiInput').value.trim();
+  if (!key) { toast('⚠ Pega tu API Key de Gemini'); return; }
+  const btn = document.querySelector('[onclick="activarGemini()"]');
+  const banner = document.getElementById('geminiBanner');
+  btn.textContent = '...'; btn.disabled = true;
+  try {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: 'Responde solo: OK' }] }] })
+    });
+    if (r.status === 400 || r.status === 200) {
+      window._geminiKey = key; S.set('gemini_key', key);
+      banner.style.cssText='display:block;margin-top:8px;padding:10px;border-radius:8px;background:rgba(0,100,255,0.15);border:1px solid #4285f4;color:#4285f4;font-size:12px;font-weight:bold;text-align:center;';
+      banner.textContent='✅ CONEXIÓN EXITOSA — Gemini IA activado para análisis inteligente';
+    } else {
+      banner.style.cssText='display:block;margin-top:8px;padding:10px;border-radius:8px;background:rgba(200,0,0,0.15);border:1px solid var(--red2);color:var(--red2);font-size:12px;font-weight:bold;text-align:center;';
+      banner.textContent='❌ API Key inválida — Verifica en aistudio.google.com';
+    }
+  } catch {
+    window._geminiKey = key; S.set('gemini_key', key);
+    banner.style.cssText='display:block;margin-top:8px;padding:10px;border-radius:8px;background:rgba(0,100,255,0.15);border:1px solid #4285f4;color:#4285f4;font-size:12px;font-weight:bold;text-align:center;';
+    banner.textContent='✅ API Key guardada — Gemini IA listo';
+  } finally { btn.textContent='ACTIVAR'; btn.disabled=false; }
+}
+
+// ── MetaDefender ────────────────────────────────────────────
+async function checkMetaDefender(hash) {
+  const key = window._metaKey;
+  if (!key) return null;
+  try {
+    const r = await fetch('https://api.metadefender.com/v4/hash/'+hash, {
+      headers: { 'apikey': key }
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (!d.scan_results) return { found: false };
+    const sr = d.scan_results;
+    return {
+      found: true,
+      total_detected: sr.total_detected_avs || 0,
+      total_engines: sr.total_avs || 0,
+      verdict: sr.scan_all_result_a || 'unknown',
+      progress: sr.progress_percentage || 100
+    };
+  } catch { return null; }
+}
+
+async function activarMeta() {
+  const key = document.getElementById('metaInput').value.trim();
+  if (!key) { toast('⚠ Pega tu API Key de MetaDefender'); return; }
+  const btn = document.querySelector('[onclick="activarMeta()"]');
+  const banner = document.getElementById('metaBanner');
+  btn.textContent = '...'; btn.disabled = true;
+  try {
+    const r = await fetch('https://api.metadefender.com/v4/hash/275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f', {
+      headers: { 'apikey': key }
+    });
+    if (r.status === 401 || r.status === 403) {
+      banner.style.cssText='display:block;margin-top:8px;padding:10px;border-radius:8px;background:rgba(200,0,0,0.15);border:1px solid var(--red2);color:var(--red2);font-size:12px;font-weight:bold;text-align:center;';
+      banner.textContent='❌ API Key inválida — Verifica en metadefender.opswat.com';
+    } else {
+      window._metaKey = key; S.set('meta_key', key);
+      banner.style.cssText='display:block;margin-top:8px;padding:10px;border-radius:8px;background:rgba(0,200,100,0.15);border:1px solid var(--green);color:var(--green);font-size:12px;font-weight:bold;text-align:center;';
+      banner.textContent='✅ CONEXIÓN EXITOSA — MetaDefender activado con 30+ motores';
+    }
+  } catch {
+    window._metaKey = key; S.set('meta_key', key);
+    banner.style.cssText='display:block;margin-top:8px;padding:10px;border-radius:8px;background:rgba(0,200,100,0.15);border:1px solid var(--green);color:var(--green);font-size:12px;font-weight:bold;text-align:center;';
+    banner.textContent='✅ API Key guardada — MetaDefender listo';
+  } finally { btn.textContent='ACTIVAR'; btn.disabled=false; }
 }
 
 // ── Activar API Key ─────────────────────────────────────────
@@ -581,16 +869,57 @@ async function startScan() {
 
     let vt = null;
     if (window._vtKey) {
-      prog(baseP+8, 'Consultando VirusTotal...');
+      prog(baseP+6, 'Consultando VirusTotal...');
       log('Consultando VirusTotal (+70 motores)...', 'info');
       vt = await checkVT(hash);
       if (vt) log('VT: '+vt.malicious+' detecciones de '+(vt.malicious+vt.harmless)+' motores', vt.malicious>0?'bad':'ok');
       else log('Archivo no encontrado en VT — archivo nuevo o desconocido', 'warn');
     }
 
-    const verdict = vt ? (vt.malicious>0?'malicious':'clean') : h.verdict;
+    let koodous = null;
+    if (window._koodousKey) {
+      prog(baseP+8, 'Consultando Koodous (Android)...');
+      log('Consultando Koodous (especializado Android)...', 'info');
+      koodous = await checkKoodous(hash);
+      if (koodous && koodous.found) log('Koodous: '+(koodous.detected?'⚠ DETECTADO':'✅ Limpio')+' — '+koodous.name, koodous.detected?'bad':'ok');
+      else if (koodous) log('Koodous: APK no encontrado en base de datos', 'warn');
+    }
+
+    let hybrid = null;
+    if (window._hybridKey) {
+      prog(baseP+10, 'Consultando Hybrid Analysis...');
+      log('Consultando Hybrid Analysis (sandbox)...', 'info');
+      hybrid = await checkHybrid(hash);
+      if (hybrid && hybrid.found) log('Hybrid: veredicto='+hybrid.verdict+' score='+hybrid.threat_score, hybrid.verdict==='malicious'?'bad':hybrid.verdict==='suspicious'?'warn':'ok');
+      else if (hybrid) log('Hybrid: archivo no encontrado en sandbox', 'warn');
+    }
+
+    // MetaDefender
+    let meta = null;
+    if (window._metaKey) {
+      prog(baseP+12, 'Consultando MetaDefender (30+ motores)...');
+      log('Consultando MetaDefender...', 'info');
+      meta = await checkMetaDefender(hash);
+      if (meta && meta.found) log('MetaDefender: '+meta.total_detected+'/'+meta.total_engines+' — '+meta.verdict, meta.total_detected>0?'bad':'ok');
+    }
+
+    // Gemini AI analysis
+    let geminiAnalysis = null;
+    if (window._geminiKey) {
+      prog(baseP+14, 'Analizando con Gemini IA...');
+      log('Analizando con Google Gemini IA...', 'info');
+      const vtMal = vt ? vt.malicious : null;
+      const vtTot = vt ? vt.malicious+vt.harmless : null;
+      geminiAnalysis = await analyzeWithGemini(file.name, fmtSize(file.size), ext, vtMal, vtTot, h.verdict);
+      if (geminiAnalysis) log('Gemini IA: análisis completado ✅', 'ok');
+    }
+
+    const verdict = vt ? (vt.malicious>0?'malicious':'clean') :
+                    meta && meta.found && meta.total_detected>0 ? 'malicious' :
+                    hybrid && hybrid.found ? hybrid.verdict :
+                    koodous && koodous.detected ? 'malicious' : h.verdict;
     log('Veredicto final: '+hLabels[verdict], verdict==='clean'?'ok':verdict==='suspicious'?'warn':'bad');
-    allResults.push({ file, hash, h, vt, verdict });
+    allResults.push({ file, hash, h, vt, koodous, hybrid, meta, geminiAnalysis, verdict });
     saveHistory(file, hash, verdict);
     prog(nextP, i+1 < total ? 'Siguiente archivo...' : 'Completado');
     await sleep(200);
@@ -728,6 +1057,113 @@ function classifyMalware(vtEngines, ext, fileName) {
   };
 }
 
+// ── Motores especializados Android ──────────────────────────
+function getAndroidEngines(hash, fileName, vtResult) {
+  const name = encodeURIComponent(fileName);
+  const h    = encodeURIComponent(hash);
+  const q    = encodeURIComponent(fileName + ' malware android');
+
+  return [
+    {
+      name: 'VirusTotal',
+      icon: '🛡️',
+      color: '#ff6600',
+      desc: 'Base de datos de +70 antivirus',
+      url: `https://www.virustotal.com/gui/search/${h}`
+    },
+    {
+      name: 'APKPure Scanner',
+      icon: '📱',
+      color: '#00aaff',
+      desc: 'Especializado en APKs Android',
+      url: `https://apkpure.com/search?q=${name}`
+    },
+    {
+      name: 'Koodous',
+      icon: '🔬',
+      color: '#aa44ff',
+      desc: 'Antivirus colaborativo Android',
+      url: `https://koodous.com/apks?search=${name}`
+    },
+    {
+      name: 'MobSF',
+      icon: '🧪',
+      color: '#00cc88',
+      desc: 'Análisis estático de APKs',
+      url: `https://mobsf.live/`
+    },
+    {
+      name: 'AndroTotal',
+      icon: '🤖',
+      color: '#ffaa00',
+      desc: 'Motor de análisis Android',
+      url: `https://andrototal.org/`
+    },
+    {
+      name: 'Hybrid Analysis',
+      icon: '⚗️',
+      color: '#ff4488',
+      desc: 'Sandbox de análisis dinámico',
+      url: `https://www.hybrid-analysis.com/search?query=${h}`
+    },
+    {
+      name: 'ANY.RUN',
+      icon: '▶️',
+      color: '#44aaff',
+      desc: 'Sandbox interactivo online',
+      url: `https://app.any.run/`
+    },
+    {
+      name: 'Joe Sandbox',
+      icon: '🏖️',
+      color: '#ffcc00',
+      desc: 'Análisis en entorno aislado',
+      url: `https://www.joesandbox.com/#advanced`
+    },
+    {
+      name: 'Google Safe Browsing',
+      icon: '🌐',
+      color: '#4285f4',
+      desc: 'Verificador de Google',
+      url: `https://transparencyreport.google.com/safe-browsing/search`
+    },
+    {
+      name: 'Pithus',
+      icon: '🐍',
+      color: '#ff6644',
+      desc: 'Análisis gratuito de APKs',
+      url: `https://beta.pithus.org/`
+    }
+  ];
+}
+
+function renderAndroidEngines(hash, fileName, vtResult) {
+  const engines = getAndroidEngines(hash, fileName, vtResult);
+  return `
+    <div style="margin-top:10px;background:var(--bg3);border-radius:8px;padding:12px;">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:10px;">
+        🤖 MOTORES ESPECIALIZADOS EN ANDROID
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        ${engines.map(e => `
+          <a href="${e.url}" target="_blank" style="
+            display:flex;align-items:center;gap:8px;
+            background:rgba(0,0,0,0.3);border:1px solid ${e.color}22;
+            border-radius:8px;padding:8px;text-decoration:none;
+            transition:all 0.2s;">
+            <span style="font-size:18px;">${e.icon}</span>
+            <div style="min-width:0;">
+              <div style="font-size:11px;font-weight:bold;color:${e.color};">${e.name}</div>
+              <div style="font-size:9px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.desc}</div>
+            </div>
+          </a>`).join('')}
+      </div>
+      <div style="font-size:10px;color:var(--text2);text-align:center;margin-top:8px;">
+        💡 Sube el archivo manualmente a cualquiera de estos motores para análisis adicional
+      </div>
+    </div>`;
+}
+
 // ── Show Results ───────────────────────────────────────────
 function showResults(results) {
   const el = document.getElementById('results');
@@ -846,6 +1282,76 @@ function showResults(results) {
             </div>`;
           }).join('')}` : `<div style="color:var(--green);font-size:12px;text-align:center;padding:8px;">✅ Ningún motor detectó amenazas</div>`}
         </div>`;
+    // Gemini AI result (shown first — most prominent)
+    if (r.geminiAnalysis) {
+      html += `<div style="margin-top:10px;background:linear-gradient(135deg,rgba(26,115,232,0.1),rgba(66,133,244,0.05));border:1px solid #4285f4;border-radius:10px;padding:14px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <span style="font-size:22px;">🤖</span>
+          <div>
+            <div style="font-size:11px;font-weight:bold;color:#4285f4;letter-spacing:1px;">ANÁLISIS DE GOOGLE GEMINI IA</div>
+            <div style="font-size:9px;color:var(--text2);">Inteligencia artificial especializada en seguridad</div>
+          </div>
+        </div>
+        <div style="font-size:13px;color:var(--text);line-height:1.7;font-style:italic;">"${r.geminiAnalysis}"</div>
+      </div>`;
+    }
+
+    // MetaDefender results
+    if (r.meta && r.meta.found) {
+      const mt = r.meta;
+      const mtColor = mt.total_detected>0?'var(--red2)':'var(--green)';
+      html += `<div style="margin-top:10px;background:var(--bg3);border-radius:8px;padding:12px;">
+        <div style="font-size:10px;color:#00cc88;letter-spacing:2px;margin-bottom:8px;">🛡️ METADEFENDER — ${mt.total_engines} MOTORES</div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+          <span style="font-size:24px;">${mt.total_detected>0?'🚨':'✅'}</span>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:bold;color:${mtColor};">${mt.verdict}</div>
+            <div style="font-size:11px;color:var(--text2);">${mt.total_detected} de ${mt.total_engines} motores detectaron amenaza</div>
+          </div>
+        </div>
+        <div style="background:var(--bg);border-radius:4px;height:8px;overflow:hidden;">
+          <div style="background:${mtColor};height:100%;width:${Math.round(mt.total_detected/mt.total_engines*100)}%;"></div>
+        </div>
+      </div>`;
+    }
+
+    // Koodous results
+    if (r.koodous && r.koodous.found) {
+      const kd = r.koodous;
+      html += `<div style="margin-top:10px;background:var(--bg3);border-radius:8px;padding:12px;">
+        <div style="font-size:10px;color:#aa44ff;letter-spacing:2px;margin-bottom:8px;">🔬 KOODOUS — ESPECIALISTA ANDROID</div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+          <span style="font-size:24px;">${kd.detected?'🚨':'✅'}</span>
+          <div>
+            <div style="font-size:13px;font-weight:bold;color:${kd.detected?'var(--red2)':'var(--green)'};">${kd.detected?'AMENAZA DETECTADA':'LIMPIO'}</div>
+            ${kd.name?`<div style="font-size:11px;color:var(--text2);">App: ${kd.name}</div>`:''}
+            ${kd.package?`<div style="font-size:10px;color:var(--text2);">Paquete: ${kd.package}</div>`:''}
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // Hybrid Analysis results
+    if (r.hybrid && r.hybrid.found) {
+      const hy = r.hybrid;
+      const hyColor = hy.verdict==='malicious'?'var(--red2)':hy.verdict==='suspicious'?'var(--yellow)':'var(--green)';
+      html += `<div style="margin-top:10px;background:var(--bg3);border-radius:8px;padding:12px;">
+        <div style="font-size:10px;color:#ff4488;letter-spacing:2px;margin-bottom:8px;">⚗️ HYBRID ANALYSIS — SANDBOX</div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+          <span style="font-size:24px;">${hy.verdict==='malicious'?'🚨':hy.verdict==='suspicious'?'⚠️':'✅'}</span>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:bold;color:${hyColor};">${hy.verdict.toUpperCase()}</div>
+            <div style="font-size:11px;color:var(--text2);">Threat Score: ${hy.threat_score}/100</div>
+            ${hy.malware_family?`<div style="font-size:11px;color:var(--red2);">Familia: ${hy.malware_family}</div>`:''}
+            ${hy.av_detect?`<div style="font-size:11px;color:var(--text2);">AV Detect: ${hy.av_detect}%</div>`:''}
+          </div>
+        </div>
+        <div style="background:var(--bg);border-radius:6px;height:8px;overflow:hidden;">
+          <div style="background:${hyColor};height:100%;width:${hy.threat_score}%;transition:width 1s;"></div>
+        </div>
+      </div>`;
+    }
+
     } else if (window._vtKey) {
       html += `<div style="margin-top:10px;background:var(--bg3);border-radius:8px;padding:12px;">
         <div style="font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:6px;">☁ VIRUSTOTAL</div>
@@ -921,6 +1427,9 @@ function showResults(results) {
           </div>
         </div>`;
     }
+
+    // Android specialized engines (always shown)
+    html += renderAndroidEngines(r.hash, r.file.name, r.vt);
 
     // Heuristic with clickable links
     html += `<div style="margin-top:10px;background:var(--bg3);border-radius:8px;padding:12px;">
@@ -1180,6 +1689,10 @@ window.addEventListener('DOMContentLoaded', () => {
   if (window._vtKey) updateVtStatus(true);
   updateStats();
   document.getElementById('apiInput').value = window._vtKey;
+  if (window._koodousKey) document.getElementById('koodousInput').value = window._koodousKey;
+  if (window._hybridKey) document.getElementById('hybridInput').value = window._hybridKey;
+  if (window._geminiKey) document.getElementById('geminiInput').value = window._geminiKey;
+  if (window._metaKey) document.getElementById('metaInput').value = window._metaKey;
 
   // Pedir permisos de notificación
   if ('Notification' in window && Notification.permission === 'default') {

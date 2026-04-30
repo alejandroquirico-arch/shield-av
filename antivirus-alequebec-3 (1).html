@@ -339,21 +339,21 @@ body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif;min-hei
     <div id="geminiBanner" style="display:none;margin-top:8px;padding:10px;border-radius:8px;font-size:12px;font-weight:bold;text-align:center;"></div>
   </div>
 
-  <!-- MetaDefender -->
+  <!-- AlienVault OTX -->
   <div class="card">
-    <div class="card-title">🛡️ API Key — MetaDefender (30+ motores)</div>
+    <div class="card-title">🌐 API Key — AlienVault OTX</div>
     <p style="font-size:12px;color:var(--text2);margin-bottom:10px;">
-      30+ motores antivirus gratis. Registro en
-      <a href="https://metadefender.opswat.com" target="_blank" style="color:#00cc88;">metadefender.opswat.com</a> → API Key
+      Base de datos de amenazas más grande del mundo. 100% gratis en
+      <a href="https://otx.alienvault.com" target="_blank" style="color:#00cc88;">otx.alienvault.com</a> → Sign Up → Settings → OTX Key
     </p>
     <div class="api-row">
-      <input class="api-input" id="metaInput" type="password" placeholder="Pega tu API Key de MetaDefender">
+      <input class="api-input" id="metaInput" type="password" placeholder="Pega tu OTX Key de AlienVault">
       <button class="btn-activar" style="background:linear-gradient(135deg,#00aa66,#006644);" onclick="activarMeta()">ACTIVAR</button>
     </div>
     <div style="display:flex;gap:8px;margin-top:8px;">
       <button onclick="document.getElementById('metaInput').type=document.getElementById('metaInput').type==='password'?'text':'password';this.textContent=document.getElementById('metaInput').type==='password'?'👁 Ver':'🙈 Ocultar';"
         style="flex:1;background:transparent;border:1px solid var(--border);color:var(--text2);padding:8px;border-radius:6px;font-size:11px;cursor:pointer;">👁 Ver</button>
-      <button onclick="if(confirm('¿Borrar API Key de MetaDefender?')){S.del('meta_key');window._metaKey='';document.getElementById('metaInput').value='';toast('MetaDefender API Key eliminada');}"
+      <button onclick="if(confirm('¿Borrar API Key de AlienVault?')){S.del('meta_key');window._metaKey='';document.getElementById('metaInput').value='';toast('AlienVault OTX Key eliminada');}"
         style="flex:1;background:transparent;border:1px solid var(--red);color:var(--red2);padding:8px;border-radius:6px;font-size:11px;cursor:pointer;">🗑️ Borrar</button>
     </div>
     <div id="metaBanner" style="display:none;margin-top:8px;padding:10px;border-radius:8px;font-size:12px;font-weight:bold;text-align:center;"></div>
@@ -680,50 +680,52 @@ async function activarGemini() {
   } finally { btn.textContent='ACTIVAR'; btn.disabled=false; }
 }
 
-// ── MetaDefender ────────────────────────────────────────────
+// ── AlienVault OTX ──────────────────────────────────────────
 async function checkMetaDefender(hash) {
   const key = window._metaKey;
   if (!key) return null;
   try {
-    const r = await fetch('https://api.metadefender.com/v4/hash/'+hash, {
-      headers: { 'apikey': key }
+    const r = await fetch('https://otx.alienvault.com/api/v1/indicators/file/'+hash+'/analysis', {
+      headers: { 'X-OTX-API-KEY': key }
     });
     if (!r.ok) return null;
     const d = await r.json();
-    if (!d.scan_results) return { found: false };
-    const sr = d.scan_results;
+    const pulse_count = d.pulse_info?.count || 0;
+    const malware = d.malware?.data || [];
     return {
       found: true,
-      total_detected: sr.total_detected_avs || 0,
-      total_engines: sr.total_avs || 0,
-      verdict: sr.scan_all_result_a || 'unknown',
-      progress: sr.progress_percentage || 100
+      total_detected: pulse_count,
+      total_engines: pulse_count > 0 ? pulse_count : 0,
+      verdict: pulse_count > 0 ? 'MALICIOSO' : 'LIMPIO',
+      malware_family: malware.length > 0 ? malware[0] : '',
+      pulses: pulse_count
     };
   } catch { return null; }
 }
 
 async function activarMeta() {
   const key = document.getElementById('metaInput').value.trim();
-  if (!key) { toast('⚠ Pega tu API Key de MetaDefender'); return; }
+  if (!key) { toast('⚠ Pega tu OTX Key de AlienVault'); return; }
   const btn = document.querySelector('[onclick="activarMeta()"]');
   const banner = document.getElementById('metaBanner');
   btn.textContent = '...'; btn.disabled = true;
   try {
-    const r = await fetch('https://api.metadefender.com/v4/hash/275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f', {
-      headers: { 'apikey': key }
+    const r = await fetch('https://otx.alienvault.com/api/v1/user/me', {
+      headers: { 'X-OTX-API-KEY': key }
     });
     if (r.status === 401 || r.status === 403) {
       banner.style.cssText='display:block;margin-top:8px;padding:10px;border-radius:8px;background:rgba(200,0,0,0.15);border:1px solid var(--red2);color:var(--red2);font-size:12px;font-weight:bold;text-align:center;';
-      banner.textContent='❌ API Key inválida — Verifica en metadefender.opswat.com';
+      banner.textContent='❌ OTX Key inválida — Verifica en otx.alienvault.com';
     } else {
+      const d = await r.json();
       window._metaKey = key; S.set('meta_key', key);
       banner.style.cssText='display:block;margin-top:8px;padding:10px;border-radius:8px;background:rgba(0,200,100,0.15);border:1px solid var(--green);color:var(--green);font-size:12px;font-weight:bold;text-align:center;';
-      banner.textContent='✅ CONEXIÓN EXITOSA — MetaDefender activado con 30+ motores';
+      banner.textContent='✅ CONEXIÓN EXITOSA — AlienVault OTX activado' + (d.username ? ' · Usuario: '+d.username : '');
     }
   } catch {
     window._metaKey = key; S.set('meta_key', key);
     banner.style.cssText='display:block;margin-top:8px;padding:10px;border-radius:8px;background:rgba(0,200,100,0.15);border:1px solid var(--green);color:var(--green);font-size:12px;font-weight:bold;text-align:center;';
-    banner.textContent='✅ API Key guardada — MetaDefender listo';
+    banner.textContent='✅ OTX Key guardada — AlienVault listo';
   } finally { btn.textContent='ACTIVAR'; btn.disabled=false; }
 }
 
@@ -897,10 +899,10 @@ async function startScan() {
     // MetaDefender
     let meta = null;
     if (window._metaKey) {
-      prog(baseP+12, 'Consultando MetaDefender (30+ motores)...');
-      log('Consultando MetaDefender...', 'info');
+      prog(baseP+12, 'Consultando AlienVault OTX...');
+      log('Consultando AlienVault OTX (base de amenazas global)...', 'info');
       meta = await checkMetaDefender(hash);
-      if (meta && meta.found) log('MetaDefender: '+meta.total_detected+'/'+meta.total_engines+' — '+meta.verdict, meta.total_detected>0?'bad':'ok');
+      if (meta && meta.found) log('AlienVault OTX: '+meta.pulses+' pulsos de amenaza — '+meta.verdict, meta.total_detected>0?'bad':'ok');
     }
 
     // Gemini AI analysis
@@ -1301,16 +1303,14 @@ function showResults(results) {
       const mt = r.meta;
       const mtColor = mt.total_detected>0?'var(--red2)':'var(--green)';
       html += `<div style="margin-top:10px;background:var(--bg3);border-radius:8px;padding:12px;">
-        <div style="font-size:10px;color:#00cc88;letter-spacing:2px;margin-bottom:8px;">🛡️ METADEFENDER — ${mt.total_engines} MOTORES</div>
+        <div style="font-size:10px;color:#00cc88;letter-spacing:2px;margin-bottom:8px;">🌐 ALIENVAULT OTX — BASE DE AMENAZAS GLOBAL</div>
         <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
           <span style="font-size:24px;">${mt.total_detected>0?'🚨':'✅'}</span>
           <div style="flex:1;">
             <div style="font-size:13px;font-weight:bold;color:${mtColor};">${mt.verdict}</div>
-            <div style="font-size:11px;color:var(--text2);">${mt.total_detected} de ${mt.total_engines} motores detectaron amenaza</div>
+            <div style="font-size:11px;color:var(--text2);">${mt.pulses} pulsos de amenaza detectados en la base global</div>
+            ${mt.malware_family?`<div style="font-size:11px;color:var(--red2);margin-top:2px;">Familia: ${mt.malware_family}</div>`:''}
           </div>
-        </div>
-        <div style="background:var(--bg);border-radius:4px;height:8px;overflow:hidden;">
-          <div style="background:${mtColor};height:100%;width:${Math.round(mt.total_detected/mt.total_engines*100)}%;"></div>
         </div>
       </div>`;
     }
